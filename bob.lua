@@ -153,6 +153,8 @@ local function init_pages()
       }
     }
   }
+
+  Pages.init(ui_params, fps)
 end
 
 local function init_ui_refresh_metro()
@@ -176,8 +178,8 @@ local function init_ui()
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(get_current_page_param_id(1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(get_current_page_param_id(2))*64), 15)
+      my_arc:led(1, util.round(params:get_raw(Pages.get_current_page_param_id(1))*64), 15)
+      my_arc:led(2, util.round(params:get_raw(Pages.get_current_page_param_id(2))*64), 15)
     end
   }
 
