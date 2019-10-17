@@ -115,51 +115,6 @@ local function init_params()
   }
 end
 
---[[
-local function init_ui_refresh_metro()
-  local ui_refresh_metro = metro.init()
-  ui_refresh_metro.event = UI.refresh
-  ui_refresh_metro.time = 1/60
-  ui_refresh_metro:start()
-end
-
-local function init_ui()
-  UI.init_arc {
-    device = arc.connect(),
-    delta_callback = function(n, delta)
-      local d
-      if fine then
-        d = delta/5
-      else
-        d = delta
-      end
-      if n == 1 then
-        local val = params:get_raw("pitch_ratio")
-        params:set_raw("pitch_ratio", val+d/500)
-      elseif n == 2 then
-        local val = params:get_raw("freq_shift")
-        params:set_raw("freq_shift", val+d/500)
-      end
-      flash_event()
-      UI.set_dirty()
-    end,
-    refresh_callback = function(my_arc)
-      my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw("pitch_ratio")*64), 15)
-      my_arc:led(2, util.round(params:get_raw("freq_shift")*64), 15)
-    end
-  }
-
-  UI.init_screen {
-    refresh_callback = function()
-      redraw()
-    end
-  }
-
-  init_ui_refresh_metro()
-end
-]]
-
 local function refresh_ui()
   if target_page then
     current_page = current_page + page_trans_div
@@ -455,14 +410,6 @@ function key(n, z)
   if n == 2 then
     if z == 1 then
       page = page - 1
-      --[[
-      --TODO
-      if page < 1 then
-        current_page = num_pages
-      else
-        transition_to_page(page)
-      end
-      ]]
       if page < 1 then
         page = num_pages
       end
@@ -476,14 +423,6 @@ function key(n, z)
   elseif n == 3 then
     if z == 1 then
       page = page + 1
-      --[[
-      --TODO
-      if page > num_pages then
-        current_page = 1
-      else
-        transition_to_page(page)
-      end
-      ]]
       if page > num_pages then
         page = 1
       end

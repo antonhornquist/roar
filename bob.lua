@@ -1,5 +1,5 @@
 -- scriptname: bob
--- v1.1.1 @jah
+-- v1.2.0 @jah
 
 engine.name = 'R'
 
@@ -201,7 +201,7 @@ local ui_params = {
       end
     },
     {
-      label="L>FREQ",
+      label="L>FRQ",
       id="lfo_to_cutoff",
       value=function(id)
         return format_percentage(params:get(id))
@@ -377,14 +377,6 @@ function key(n, z)
   if n == 2 then
     if z == 1 then
       page = page - 1
-      --[[
-      --TODO
-      if page < 1 then
-        current_page = num_pages
-      else
-        transition_to_page(page)
-      end
-      ]]
       if page < 1 then
         page = num_pages
       end
@@ -398,14 +390,6 @@ function key(n, z)
   elseif n == 3 then
     if z == 1 then
       page = page + 1
-      --[[
-      --TODO
-      if page > num_pages then
-        current_page = 1
-      else
-        transition_to_page(page)
-      end
-      ]]
       if page > num_pages then
         page = 1
       end
