@@ -5,8 +5,10 @@ engine.name = 'R'
 
 local Formatters = require('formatters')
 local R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
+
 local UI = include('lib/ui')
 local Pages = include('lib/pages')
+local RoarFormatters = include('lib/formatters')
 
 local fps = 120
 
@@ -175,7 +177,7 @@ local function init_pages()
         label=">P.RAT",
         id="lfo_to_pitch_ratio",
         value=function(id)
-          return params:string(id)
+          return RoarFormatters.percentage(params:get(id))
         end
       },
       {
@@ -202,13 +204,7 @@ local function init_ui()
   UI.init_arc {
     device = arc.connect(),
     on_delta = function(n, delta)
-      local d
-      if fine then
-        d = delta/5
-      else
-        d = delta
-      end
-      change_current_page_param_raw_delta(n, d/500)
+      change_current_page_param_raw_delta(n, delta/500)
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
@@ -257,17 +253,11 @@ function change_current_page_param_raw_delta(n, rawdelta)
 end
 
 function enc(n, delta)
-  local d
-  if fine then
-    d = delta/5
-  else
-    d = delta
-  end
   if n == 1 then
-    mix:delta("output", d)
+    mix:delta("output", delta)
     UI.screen_dirty = true
   else
-    change_current_page_param_delta(n-1, d)
+    change_current_page_param_delta(n-1, delta)
   end
 end
 

@@ -5,8 +5,10 @@ engine.name = 'R'
 
 local Formatters = require('formatters')
 local R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
+
 local UI = include('lib/ui')
 local Pages = include('lib/pages')
+local RoarFormatters = include('lib/formatters')
 
 local fps = 120
 
@@ -98,41 +100,20 @@ local function refresh_ui()
 end
 
 local function init_pages()
-  local function format_percentage(value)
-    return util.round(value*100, 1) .. "%"
-  end
-
-  local function format_freq(hz)
-    if hz < 1 then
-      local str = tostring(util.round(hz, 0.001))
-      return string.sub(str, 2, #str).."Hz"
-    elseif hz < 10 then
-      return util.round(hz, 0.01).."Hz"
-    elseif hz < 100 then
-      return util.round(hz, 0.1).."Hz"
-    elseif hz < 1000 then
-      return util.round(hz, 1).."Hz"
-    elseif hz < 10000 then
-      return util.round(hz/1000, 0.1) .. "kHz"
-    else
-      return util.round(hz/1000, 1) .. "kHz"
-    end
-  end
-
   local ui_params = {
     {
       {
         label="FREQ",
         id="cutoff",
         value=function(id)
-          return format_freq(params:get(id))
+          return RoarFormatters.adaptive_freq(params:get(id))
         end
       },
       {
         label="RES",
         id="resonance",
         value=function(id)
-          return format_percentage(params:get(id))
+          return RoarFormatters.percentage(params:get(id))
         end
       }
     },
@@ -141,14 +122,14 @@ local function init_pages()
         label="LFO",
         id="lfo_rate",
         value=function(id)
-          return format_freq(params:get(id))
+          return RoarFormatters.adaptive_freq(params:get(id))
         end
       },
       {
         label="L>FRQ",
         id="lfo_to_cutoff",
         value=function(id)
-          return format_percentage(params:get(id))
+          return RoarFormatters.percentage(params:get(id))
         end
       }
     }

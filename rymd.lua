@@ -6,11 +6,14 @@ engine.name = 'R'
 local ControlSpec = require 'controlspec'
 local Formatters = require 'formatters'
 local R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
+
 local UI = include('lib/ui')
 local Pages = include('lib/pages')
+local RoarFormatters = include('lib/formatters')
+
+local fps = 120
 
 local fine = false -- TODO
-local fps = 120
 
 local function create_modules()
   engine.new("LFO", "MultiLFO")
@@ -169,37 +172,6 @@ local function refresh_ui()
 end
 
 local function init_pages()
-  local function format_percentage(value)
-    return util.round(value*100, 1) .. "%"
-  end
-
-  local function format_time(ms)
-    if util.round(ms, 1) < 1000 then
-      return util.round(ms, 1) .. "ms"
-    elseif util.round(ms, 1) < 10000 then
-      return util.round(ms/1000, 0.01) .. "s"
-    else
-      return util.round(ms/1000, 0.1) .. "s"
-    end
-  end
-
-  local function format_freq(hz)
-    if hz < 1 then
-      local str = tostring(util.round(hz, 0.001))
-      return string.sub(str, 2, #str).."Hz"
-    elseif hz < 10 then
-      return util.round(hz, 0.01).."Hz"
-    elseif hz < 100 then
-      return util.round(hz, 0.1).."Hz"
-    elseif hz < 1000 then
-      return util.round(hz, 1).."Hz"
-    elseif hz < 10000 then
-      return util.round(hz/1000, 0.1) .. "kHz"
-    else
-      return util.round(hz/1000, 1) .. "kHz"
-    end
-  end
-
   local ui_params = {
     {
       {
@@ -222,14 +194,14 @@ local function init_pages()
         label="L.TIME",
         id="delay_time_left",
         value=function(id)
-          return format_time(params:get(id))
+          return RoarFormatters.adaptive_time(params:get(id))
         end
       },
       {
         label="R.TIME",
         id="delay_time_right",
         value=function(id)
-          return format_time(params:get(id))
+          return RoarFormatters.adaptive_time(params:get(id))
         end
       }
     },
@@ -238,7 +210,7 @@ local function init_pages()
         label="DAMP",
         id="damping",
         value=function(id)
-          return format_freq(params:get(id))
+          return RoarFormatters.adaptive_freq(params:get(id))
         end
       },
       {
@@ -254,14 +226,14 @@ local function init_pages()
         label="RATE",
         id="mod_rate",
         value=function(id)
-          return format_freq(params:get(id))
+          return RoarFormatters.adaptive_freq(params:get(id))
         end
       },
       {
         label="MOD",
         id="delay_time_mod_depth",
         value=function(id)
-          return format_percentage(params:get(id))
+          return RoarFormatters.percentage(params:get(id))
         end
       }
     },
@@ -282,7 +254,7 @@ local function init_ui()
     device = arc.connect(),
     on_delta = function(n, delta)
       local d
-      if fine then
+      if fine then -- TODO
         d = delta/5
       else
         d = delta
@@ -338,7 +310,7 @@ end
 
 function enc(n, delta)
   local d
-  if fine then
+  if fine then -- TODO
     d = delta/5
   else
     d = delta
