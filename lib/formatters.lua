@@ -16,6 +16,16 @@ function Formatters.adaptive_time(ms)
   end
 end
 
+function Formatters.range(range)
+  if range < 0 then
+    return tostring(range)
+  elseif range > 0 then
+    return "+"..tostring(range)
+  else
+    return "0"
+  end
+end
+
 function Formatters.adaptive_freq(hz)
   if hz < 1 then
     local str = tostring(util.round(hz, 0.001))

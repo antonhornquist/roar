@@ -19,8 +19,6 @@ local note_slots = {}
 local engine_ready = false
 local fps = 120
 
-local fine = false -- TODO
-
 local function create_modules()
   R.engine.poly_new("FreqGate", "FreqGate", POLYPHONY)
   R.engine.poly_new("LFO", "SineLFO", POLYPHONY)
@@ -280,6 +278,15 @@ local function init_params()
       UI.set_dirty()
     end
   }
+
+  params:add_separator()
+
+  params:add {
+    type="number",
+    id="page",
+    name="Page",
+    default=1
+  }
 end
 
 local function release_voice(voicenum)
@@ -349,7 +356,7 @@ local function init_engine_init_delay_metro() -- TODO: dim screen until done
 end
 
 local function refresh_ui()
-  Pages.refresh(UI)
+  Pages.refresh(UI, params)
   UI.refresh()
 end
 
@@ -376,14 +383,14 @@ local function init_pages()
         label="A.RNG",
         id="osc_a_range",
         value=function(id)
-          return params:string(id)
+          return RoarFormatters.range(params:get(id))
         end
       },
       {
         label="B.RNG",
         id="osc_b_range",
         value=function(id)
-          return params:string(id)
+          return RoarFormatters.range(params:get(id))
         end
       }
     },
@@ -469,7 +476,7 @@ local function init_pages()
     }
   }
 
-  Pages.init(ui_params, fps)
+  Pages.init(ui_params, fps, params:get("page"))
 end
 
 local function init_ui_refresh_metro()
@@ -560,11 +567,12 @@ function init()
   create_macros()
 
   init_params()
-  init_ui()
-  init_pages()
 
   params:read()
   params:bang()
+
+  init_ui()
+  init_pages()
 end
 
 function cleanup()
@@ -587,7 +595,7 @@ end
 
 function enc(n, delta)
   local d
-  if fine then -- TODO: fine
+  if fine then
     d = delta/5
   else
     d = delta

@@ -115,10 +115,19 @@ local function init_params()
       UI.set_dirty()
     end
   }
+
+  params:add_separator()
+
+  params:add {
+    type="number",
+    id="page",
+    name="Page",
+    default=1
+  }
 end
 
 local function refresh_ui()
-  Pages.refresh(UI)
+  Pages.refresh(UI, params)
   UI.refresh()
 end
 
@@ -190,7 +199,7 @@ local function init_pages()
     }
   }
 
-  Pages.init(ui_params, fps)
+  Pages.init(ui_params, fps, params:get("page"))
 end
 
 local function init_ui_refresh_metro()
@@ -204,6 +213,12 @@ local function init_ui()
   UI.init_arc {
     device = arc.connect(),
     on_delta = function(n, delta)
+      local d
+      if fine then
+        d = delta/5
+      else
+        d = delta
+      end
       change_current_page_param_raw_delta(n, delta/500)
     end,
     on_refresh = function(my_arc)
@@ -227,11 +242,12 @@ function init()
   connect_modules()
 
   init_params()
-  init_ui()
-  init_pages()
 
   params:read()
   params:bang()
+
+  init_ui()
+  init_pages()
 end
 
 function cleanup()
@@ -253,11 +269,17 @@ function change_current_page_param_raw_delta(n, rawdelta)
 end
 
 function enc(n, delta)
+  local d
+  if fine then
+    d = delta/5
+  else
+    d = delta
+  end
   if n == 1 then
-    mix:delta("output", delta)
+    mix:delta("output", d)
     UI.screen_dirty = true
   else
-    change_current_page_param_delta(n-1, delta)
+    change_current_page_param_delta(n-1, d)
   end
 end
 

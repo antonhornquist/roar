@@ -14,19 +14,19 @@ local page_trans_div
 
 local num_pages
 
+local prev_held
+local next_held
+
 local Pages = {}
 
-function Pages.init(ui_params, fps)
+function Pages.init(ui_params, fps, init_page)
   Pages.ui_params = ui_params
   num_pages = #ui_params
   Pages.fps = fps
-
-  print("Pages.init")
-  print("num_pages: "..num_pages)
-  print("fps: "..fps)
+  current_page = init_page
 end
 
-function Pages.refresh(UI)
+function Pages.refresh(UI, pset)
   if target_page then
     current_page = current_page + page_trans_div
     page_trans_frames = page_trans_frames - 1
@@ -34,6 +34,7 @@ function Pages.refresh(UI)
       current_page = target_page
       target_page = nil
     end
+    pset:set("page", util.round(current_page))
     UI.set_dirty()
   end
 end
@@ -52,38 +53,44 @@ end
 
 function Pages.key(n, z, UI)
   local page
+
   if target_page then
     page = target_page
   else
     page = util.round(current_page)
   end
+
   if n == 2 then
     if z == 1 then
       page = page - 1
       if page < 1 then
         page = num_pages
       end
+
       Pages.transition_to_page(page)
 
       prev_held = true
     else
       prev_held = false
     end
-    UI.set_dirty()
   elseif n == 3 then
     if z == 1 then
       page = page + 1
       if page > num_pages then
         page = 1
       end
+
       Pages.transition_to_page(page)
 
       next_held = true
     else
       next_held = false
     end
-    UI.set_dirty()
   end
+
+  fine = prev_held and next_held -- TODO: global
+
+  UI.set_dirty()
 end
 
 function Pages.redraw(screen, UI)
@@ -91,7 +98,7 @@ function Pages.redraw(screen, UI)
   local enc1_y = 12
 
   local enc2_x = 10
-  local enc2_y = 33
+  local enc2_y = 31 -- 33
 
   local enc3_x = enc2_x+65
   local enc3_y = enc2_y
@@ -157,8 +164,25 @@ function Pages.redraw(screen, UI)
   local function redraw_page_indicator()
     local div = 128/num_pages
     screen.level(lo_level)
-    screen.rect(util.round((current_page-1)*div), enc2_y+15, util.round(div), 2)
+    screen.rect(util.round((current_page-1)*div), enc2_y+15+1, util.round(div), 2)
     screen.fill()
+  end
+
+  local function redraw_key2key3_widget()
+    --[[
+    screen.move(key2_x, key2_y)
+    screen.level(2)
+    screen.text("PREV")
+
+    screen.move(key3_x, key3_y)
+    screen.level(2)
+    screen.text("NEXT")
+    ]]
+
+    screen.move(key2_x+(key3_x-key2_x)/2, key2_y)
+    --screen.move(128/2-12, key2_y)
+    screen.level(hi_level)
+    screen.text("FINE")
   end
 
   local function redraw_key2_widget()
@@ -195,8 +219,12 @@ function Pages.redraw(screen, UI)
 
   redraw_page_indicator()
 
-  redraw_key2_widget()
-  redraw_key3_widget()
+  if fine then
+    redraw_key2key3_widget()
+  else
+    redraw_key2_widget()
+    redraw_key3_widget()
+  end
 
   screen.update()
 end
