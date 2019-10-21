@@ -24,7 +24,7 @@ function Pages.init(ui_params, fps, init_page)
   }
 end
 
-function Pages.refresh(state, UI, pset)
+function Pages.refresh(state, pset)
   if state.target_page then
     state.current_page = state.current_page + state.page_trans_div
     state.page_trans_frames = state.page_trans_frames - 1
@@ -33,7 +33,9 @@ function Pages.refresh(state, UI, pset)
       state.target_page = nil
     end
     pset:set("page", util.round(state.current_page))
-    UI.set_dirty()
+    return true
+  else
+    return false
   end
 end
 
@@ -49,7 +51,7 @@ function Pages.transition_to_page(state, page)
   state.page_trans_div = (state.target_page - state.source_page) / state.page_trans_frames
 end
 
-function Pages.key(state, n, z, UI)
+function Pages.nav(state, next, z)
   local page
 
   if state.target_page then
@@ -58,40 +60,38 @@ function Pages.key(state, n, z, UI)
     page = util.round(state.current_page)
   end
 
-  if n == 2 then
-    if z == 1 then
-      page = page - 1
-      if page < 1 then
-        page = state.num_pages
-      end
-
-      Pages.transition_to_page(page)
-
-      state.prev_held = true
-    else
-      state.prev_held = false
-    end
-  elseif n == 3 then
+  if next then
     if z == 1 then
       page = page + 1
       if page > state.num_pages then
         page = 1
       end
 
-      Pages.transition_to_page(page)
+      Pages.transition_to_page(state, page)
 
       state.next_held = true
     else
       state.next_held = false
     end
+  else
+    if z == 1 then
+      page = page - 1
+      if page < 1 then
+        page = state.num_pages
+      end
+
+      Pages.transition_to_page(state, page)
+
+      state.prev_held = true
+    else
+      state.prev_held = false
+    end
   end
 
   state.fine = state.prev_held and state.next_held
-
-  UI.set_dirty()
 end
 
-function Pages.redraw(state, screen, UI)
+function Pages.redraw(state, screen, show_event_indicator)
   local enc1_x = 0
   local enc1_y = 12
 
@@ -197,7 +197,7 @@ function Pages.redraw(state, screen, UI)
 
   redraw_enc1_widget()
 
-  if UI.show_event_indicator then
+  if show_event_indicator then
     redraw_event_flash_widget()
   end
 

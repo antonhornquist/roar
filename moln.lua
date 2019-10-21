@@ -358,7 +358,9 @@ local function init_engine_init_delay_metro() -- TODO: dim screen until done
 end
 
 local function refresh_ui()
-  Pages.refresh(pages_state, UI, params)
+  if Pages.refresh(pages_state, params) then
+    UI.set_dirty()
+  end
   UI.refresh()
 end
 
@@ -493,7 +495,7 @@ local function init_ui()
     device = arc.connect(),
     on_delta = function(n, delta)
       local d
-      if state.fine then
+      if pages_state.fine then
         d = delta/5
       else
         d = delta
@@ -582,7 +584,7 @@ function cleanup()
 end
 
 function redraw()
-  Pages.redraw(pages_state, screen, UI)
+  Pages.redraw(pages_state, screen, UI.show_event_indicator)
 end
 
 function change_current_page_param_delta(n, delta)
@@ -597,7 +599,7 @@ end
 
 function enc(n, delta)
   local d
-  if state.fine then
+  if pages_state.fine then
     d = delta/5
   else
     d = delta
@@ -611,5 +613,8 @@ function enc(n, delta)
 end
 
 function key(n, z)
-  Pages.key(pages_state, n, z, UI)
+  if n ~= 1 then
+    Pages.nav(pages_state, n == 3, z)
+    UI.set_dirty()
+  end
 end
