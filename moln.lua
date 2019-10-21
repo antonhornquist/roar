@@ -12,6 +12,8 @@ local UI = include('lib/ui')
 local Pages = include('lib/pages')
 local RoarFormatters = include('lib/formatters')
 
+local pages_state
+
 local POLYPHONY = 5
 local note_downs = {}
 local note_slots = {}
@@ -356,7 +358,7 @@ local function init_engine_init_delay_metro() -- TODO: dim screen until done
 end
 
 local function refresh_ui()
-  Pages.refresh(UI, params)
+  Pages.refresh(pages_state, UI, params)
   UI.refresh()
 end
 
@@ -476,7 +478,7 @@ local function init_pages()
     }
   }
 
-  Pages.init(ui_params, fps, params:get("page"))
+  pages_state = Pages.init(ui_params, fps, params:get("page"))
 end
 
 local function init_ui_refresh_metro()
@@ -491,7 +493,7 @@ local function init_ui()
     device = arc.connect(),
     on_delta = function(n, delta)
       local d
-      if fine then
+      if state.fine then
         d = delta/5
       else
         d = delta
@@ -500,8 +502,8 @@ local function init_ui()
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(Pages.get_current_page_param_id(1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(Pages.get_current_page_param_id(2))*64), 15)
+      my_arc:led(1, util.round(params:get_raw(Pages.get_current_page_param_id(pages_state, 1))*64), 15)
+      my_arc:led(2, util.round(params:get_raw(Pages.get_current_page_param_id(pages_state, 2))*64), 15)
     end
   }
 
@@ -580,22 +582,22 @@ function cleanup()
 end
 
 function redraw()
-  Pages.redraw(screen, UI)
+  Pages.redraw(pages_state, screen, UI)
 end
 
 function change_current_page_param_delta(n, delta)
-  params:delta(Pages.get_current_page_param_id(n), delta)
+  params:delta(Pages.get_current_page_param_id(pages_state, n), delta)
 end
 
 function change_current_page_param_raw_delta(n, rawdelta)
-  local id = Pages.get_current_page_param_id(n)
+  local id = Pages.get_current_page_param_id(pages_state, n)
   local val = params:get_raw(id)
   params:set_raw(id, val+rawdelta)
 end
 
 function enc(n, delta)
   local d
-  if fine then
+  if state.fine then
     d = delta/5
   else
     d = delta
@@ -609,5 +611,5 @@ function enc(n, delta)
 end
 
 function key(n, z)
-  Pages.key(n, z, UI)
+  Pages.key(pages_state, n, z, UI)
 end
