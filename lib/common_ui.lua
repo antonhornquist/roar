@@ -5,7 +5,7 @@
 --   2. UI global is loaded with lib/ui.lua library
 --   3. a page_params global is setup in the script that includes this file. it consists of a table of tables describing which params are on what page, and provides logic for formatting param values suitable for the enlarged, paged user interface
 --
--- warning: including this file pollutes the global namespace with the following functions: redraw, enc, key, arc_delta, ui_update, ui_set_page, ui_get_page
+-- warning: including this file pollutes the global namespace with the following functions: redraw, enc, key, arc_delta, ui_update, ui_set_page, ui_get_page, ui_get_current_page_param_id
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
@@ -21,7 +21,6 @@ local page_trans_frames
 local page_trans_div
 
 local num_pages
-local get_current_page_param_id
 local transition_to_page
 
 -- global functions
@@ -162,8 +161,7 @@ function enc(n, delta)
     mix:delta("output", d)
     UI.screen_dirty = true
   else
-    change_current_page_param_delta(n-1, d)
-    params:delta(get_current_page_param_id(n-1), d)
+    params:delta(ui_get_current_page_param_id(n-1), d)
   end
 end
 
@@ -178,20 +176,6 @@ function key(n, z)
 
   if n == 2 then
     if z == 1 then
-      page = page + 1
-      if page > num_pages() then
-        page = 1
-      end
-
-      transition_to_page(page)
-
-      next_held = true
-    else
-      next_held = false
-    end
-    UI.set_dirty()
-  elseif n == 3 then
-    if z == 1 then
       page = page - 1
       if page < 1 then
         page = num_pages()
@@ -202,6 +186,20 @@ function key(n, z)
       prev_held = true
     else
       prev_held = false
+    end
+    UI.set_dirty()
+  elseif n == 3 then
+    if z == 1 then
+      page = page + 1
+      if page > num_pages() then
+        page = 1
+      end
+
+      transition_to_page(page)
+
+      next_held = true
+    else
+      next_held = false
     end
     UI.set_dirty()
   end
@@ -216,7 +214,7 @@ function arc_delta(n, delta)
   else
     d = delta
   end
-  local id = get_current_page_param_id(n)
+  local id = ui_get_current_page_param_id(n)
   local val = params:get_raw(id)
   params:set_raw(id, val+d/500)
 end
@@ -246,15 +244,15 @@ function ui_get_page()
   return util.round(current_page)
 end
 
+function ui_get_current_page_param_id(n)
+  local page = ui_get_page()
+  return page_params[page][n].id
+end
+
 -- local functions
 
 function num_pages()
-  #page_params
-end
-
-function get_current_page_param_id(n)
-  local page = ui_get_page()
-  return page_params[page][n].id
+  return #page_params
 end
 
 function transition_to_page(page)

@@ -13,7 +13,7 @@ R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 
-include('common/ui') -- defines redraw, enc, key, arc_delta functions
+include('lib/common_ui') -- defines redraw, enc, key, arc_delta functions
 
 POLYPHONY = 5
 note_downs = {}
@@ -296,15 +296,6 @@ function init_params()
       UI.set_dirty()
     end
   }
-
-  params:add_separator()
-
-  params:add { -- TODO: move to general data file
-    type="number",
-    id="page",
-    name="Page",
-    default=1
-  }
 end
 
 function load_params()
@@ -320,8 +311,8 @@ function init_ui()
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(get_current_page_param_id(1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(get_current_page_param_id(2))*64), 15)
+      my_arc:led(1, util.round(params:get_raw(ui_get_current_page_param_id(1))*64), 15)
+      my_arc:led(2, util.round(params:get_raw(ui_get_current_page_param_id(2))*64), 15)
     end
   }
 
