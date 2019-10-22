@@ -1,97 +1,32 @@
--- utility library for paging UI
+-- common logic for unified, paged UI broken out to a shared file
 --
--- main entry points:
--- Pages.init
+-- assumptions:
+--   1. norns globals (screen, params, %c) are defined
+--   2. UI global is loaded with lib/ui.lua library
+--   3. a page_params global is setup in the script that includes this file. it consists of a table of tables describing which params are on what page, and provides logic for formatting param values suitable for the enlarged, paged user interface
+--
+-- warning: including this file pollutes the global namespace with the following functions: redraw, enc, key, arc_delta, ui_update, ui_set_page, ui_get_page
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
+local FPS = 120
 
-local Pages = {}
+local fine = false
+local prev_held = false
+local next_held = false
 
-function Pages.init(ui_params, fps, init_page)
-  return {
-    ui_params = ui_params,
-    num_pages = #ui_params,
-    fps = fps,
-    current_page = init_page,
-    prev_held = false,
-    next_held = false,
-    fine = false,
-    target_page = nil, -- TODO
-    source_page = nil, -- TODO, not sure this needs to be stored in state table
-    page_trans_frames = nil, -- TODO
-    page_trans_div = nil -- TODO
-  }
-end
+local target_page
+local current_page
+local page_trans_frames
+local page_trans_div
 
-function Pages.refresh(state, pset)
-  if state.target_page then
-    state.current_page = state.current_page + state.page_trans_div
-    state.page_trans_frames = state.page_trans_frames - 1
-    if state.page_trans_frames == 0 then
-      state.current_page = state.target_page
-      state.target_page = nil
-    end
-    pset:set("page", util.round(state.current_page))
-    return true
-  else
-    return false
-  end
-end
+local num_pages
+local get_current_page_param_id
+local transition_to_page
 
-function Pages.get_current_page_param_id(state, n)
-  local page = util.round(state.current_page)
-  return state.ui_params[page][n].id
-end
+-- global functions
 
-function Pages.transition_to_page(state, page)
-  state.source_page = state.current_page
-  state.target_page = page
-  state.page_trans_frames = state.fps/5
-  state.page_trans_div = (state.target_page - state.source_page) / state.page_trans_frames
-end
-
-function Pages.nav(state, next, z)
-  local page
-
-  if state.target_page then
-    page = state.target_page
-  else
-    page = util.round(state.current_page)
-  end
-
-  if next then
-    if z == 1 then
-      page = page + 1
-      if page > state.num_pages then
-        page = 1
-      end
-
-      Pages.transition_to_page(state, page)
-
-      state.next_held = true
-    else
-      state.next_held = false
-    end
-  else
-    if z == 1 then
-      page = page - 1
-      if page < 1 then
-        page = state.num_pages
-      end
-
-      Pages.transition_to_page(state, page)
-
-      state.prev_held = true
-    else
-      state.prev_held = false
-    end
-  end
-
-  state.fine = state.prev_held and state.next_held
-end
-
-function Pages.redraw(state, screen, show_event_indicator)
+function redraw()
   local enc1_x = 0
   local enc1_y = 12
 
@@ -124,7 +59,7 @@ function Pages.redraw(state, screen, show_event_indicator)
   end
 
   local function draw_ui_param(page, param_index, x, y)
-    local ui_param = state.ui_params[page][param_index]
+    local ui_param = page_params[page][param_index]
     screen.move(x, y)
     screen.level(LO_LEVEL)
     screen.text(ui_param.label)
@@ -134,9 +69,9 @@ function Pages.redraw(state, screen, show_event_indicator)
   end
 
   local function redraw_enc2_widget()
-    local left = math.floor(state.current_page)
-    local right = math.ceil(state.current_page)
-    local offset = state.current_page - left
+    local left = math.floor(current_page)
+    local right = math.ceil(current_page)
+    local offset = current_page - left
     local pixel_ofs = util.round(offset*128)
 
     draw_ui_param(left, 1, enc2_x-pixel_ofs, enc2_y)
@@ -147,9 +82,9 @@ function Pages.redraw(state, screen, show_event_indicator)
   end
 
   local function redraw_enc3_widget()
-    local left = math.floor(state.current_page)
-    local right = math.ceil(state.current_page)
-    local offset = state.current_page - left
+    local left = math.floor(current_page)
+    local right = math.ceil(current_page)
+    local offset = current_page - left
     local pixel_ofs = util.round(offset*128)
 
     draw_ui_param(left, 2, enc3_x-pixel_ofs, enc3_y)
@@ -160,9 +95,9 @@ function Pages.redraw(state, screen, show_event_indicator)
   end
     
   local function redraw_page_indicator()
-    local div = 128/state.num_pages
+    local div = 128/num_pages()
     screen.level(LO_LEVEL)
-    screen.rect(util.round((state.current_page-1)*div), enc2_y+15+1, util.round(div), 2)
+    screen.rect(util.round((current_page-1)*div), enc2_y+15+1, util.round(div), 2)
     screen.fill()
   end
 
@@ -174,7 +109,7 @@ function Pages.redraw(state, screen, show_event_indicator)
 
   local function redraw_key2_widget()
     screen.move(key2_x, key2_y)
-    if state.prev_held then
+    if prev_held then
       screen.level(HI_LEVEL)
     else
       screen.level(LO_LEVEL)
@@ -184,7 +119,7 @@ function Pages.redraw(state, screen, show_event_indicator)
 
   local function redraw_key3_widget()
     screen.move(key3_x, key3_y)
-    if state.next_held then
+    if next_held then
       screen.level(HI_LEVEL)
     else
       screen.level(LO_LEVEL)
@@ -197,7 +132,7 @@ function Pages.redraw(state, screen, show_event_indicator)
 
   redraw_enc1_widget()
 
-  if show_event_indicator then
+  if UI.show_event_indicator then
     redraw_event_flash_widget()
   end
 
@@ -206,7 +141,7 @@ function Pages.redraw(state, screen, show_event_indicator)
 
   redraw_page_indicator()
 
-  if state.fine then
+  if fine then
     redraw_key2key3_widget()
   else
     redraw_key2_widget()
@@ -216,4 +151,114 @@ function Pages.redraw(state, screen, show_event_indicator)
   screen.update()
 end
 
-return Pages
+function enc(n, delta)
+  local d
+  if fine then
+    d = delta/5
+  else
+    d = delta
+  end
+  if n == 1 then
+    mix:delta("output", d)
+    UI.screen_dirty = true
+  else
+    change_current_page_param_delta(n-1, d)
+    params:delta(get_current_page_param_id(n-1), d)
+  end
+end
+
+function key(n, z)
+  local page
+
+  if target_page then
+    page = target_page
+  else
+    page = ui_get_page()
+  end
+
+  if n == 2 then
+    if z == 1 then
+      page = page + 1
+      if page > num_pages() then
+        page = 1
+      end
+
+      transition_to_page(page)
+
+      next_held = true
+    else
+      next_held = false
+    end
+    UI.set_dirty()
+  elseif n == 3 then
+    if z == 1 then
+      page = page - 1
+      if page < 1 then
+        page = num_pages()
+      end
+
+      transition_to_page(page)
+
+      prev_held = true
+    else
+      prev_held = false
+    end
+    UI.set_dirty()
+  end
+
+  fine = prev_held and next_held
+end
+
+function arc_delta(n, delta)
+  local d
+  if fine then
+    d = delta/5
+  else
+    d = delta
+  end
+  local id = get_current_page_param_id(n)
+  local val = params:get_raw(id)
+  params:set_raw(id, val+d/500)
+end
+
+function ui_get_fps()
+  return FPS
+end
+
+function ui_update()
+  if target_page then
+    current_page = current_page + page_trans_div
+    page_trans_frames = page_trans_frames - 1
+    if page_trans_frames == 0 then
+      current_page = target_page
+      target_page = nil
+    end
+    UI.set_dirty()
+  end
+  UI.refresh()
+end
+
+function ui_set_page(page)
+  current_page = page
+end
+
+function ui_get_page()
+  return util.round(current_page)
+end
+
+-- local functions
+
+function num_pages()
+  #page_params
+end
+
+function get_current_page_param_id(n)
+  local page = ui_get_page()
+  return page_params[page][n].id
+end
+
+function transition_to_page(page)
+  target_page = page
+  page_trans_frames = FPS/5
+  page_trans_div = (target_page - current_page) / page_trans_frames
+end
