@@ -3,25 +3,41 @@
 
 engine.name = 'R'
 
-local ControlSpec = require('controlspec')
-local Formatters = require('formatters')
-local Voice = require('voice')
-local R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
+SETTINGS_FILE = "moln.data"
 
-local UI = include('lib/ui')
-local Pages = include('lib/pages')
-local RoarFormatters = include('lib/formatters')
+ControlSpec = require('controlspec')
+Formatters = require('formatters')
+Voice = require('voice')
+R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 
-local pages_state
+UI = include('lib/ui')
+RoarFormatters = include('lib/formatters')
 
-local POLYPHONY = 5
-local note_downs = {}
-local note_slots = {}
+include('common/ui') -- defines redraw, enc, key, arc_delta functions
 
-local engine_ready = false
-local fps = 120
+POLYPHONY = 5
+note_downs = {}
+note_slots = {}
 
-local function create_modules()
+engine_ready = false -- TODO
+
+function init()
+  voice_allocator = Voice.new(POLYPHONY)
+
+  create_modules()
+  set_static_module_params()
+  connect_modules()
+  create_macros()
+
+  load_settings()
+
+  init_params()
+  load_params()
+
+  init_ui()
+end
+
+function create_modules()
   R.engine.poly_new("FreqGate", "FreqGate", POLYPHONY)
   R.engine.poly_new("LFO", "SineLFO", POLYPHONY)
   R.engine.poly_new("Env", "ADSREnv", POLYPHONY)
@@ -33,13 +49,13 @@ local function create_modules()
   engine.new("SoundOut", "SoundOut")
 end
 
-local function set_static_module_params()
+function set_static_module_params()
   R.engine.poly_set("OscA.FM", 1, POLYPHONY)
   R.engine.poly_set("OscB.FM", 1, POLYPHONY)
   R.engine.poly_set("Filter.AudioLevel", 1, POLYPHONY)
 end
 
-local function connect_modules()
+function connect_modules()
   R.engine.poly_connect("FreqGate/Frequency", "OscA/FM", POLYPHONY)
   R.engine.poly_connect("FreqGate/Frequency", "OscB/FM", POLYPHONY)
   R.engine.poly_connect("FreqGate/Gate", "Env/Gate", POLYPHONY)
@@ -57,7 +73,7 @@ local function connect_modules()
   end
 end
 
-local function create_macros()
+function create_macros()
   engine.newmacro("osc_a_range", R.util.poly_expand("OscA.Range", POLYPHONY))
   engine.newmacro("osc_a_pulsewidth", R.util.poly_expand("OscA.PulseWidth", POLYPHONY))
   engine.newmacro("osc_b_range", R.util.poly_expand("OscB.Range", POLYPHONY))
@@ -76,7 +92,7 @@ local function create_macros()
   engine.newmacro("env_release", R.util.poly_expand("Env.Release", POLYPHONY))
 end
 
-local function init_params()
+function init_params()
   params:add {
     type="control",
     id="osc_a_range",
@@ -283,7 +299,7 @@ local function init_params()
 
   params:add_separator()
 
-  params:add {
+  params:add { -- TODO: move to general data file
     type="number",
     id="page",
     name="Page",
@@ -291,81 +307,90 @@ local function init_params()
   }
 end
 
-local function release_voice(voicenum)
-  engine.bulkset("FreqGate"..voicenum..".Gate 0")
+function load_params()
+  params:read()
+  params:bang()
 end
 
-local function to_hz(note)
-  local exp = (note - 21) / 12
-  return 27.5 * 2^exp
-end
-
-local function note_on(note, velocity)
-  local function trig_voice(voicenum, note)
-    engine.bulkset("FreqGate"..voicenum..".Gate 1 FreqGate"..voicenum..".Frequency "..to_hz(note))
-  end
-
-  if not note_slots[note] then
-    local slot = voice_allocator:get()
-    local voicenum = slot.id
-    trig_voice(voicenum, note)
-    slot.on_release = function()
-      release_voice(voicenum)
-      note_slots[note] = nil
+function init_ui()
+  UI.init_arc {
+    device = arc.connect(),
+    on_delta = function(n, delta)
+      arc_delta(n, delta)
+    end,
+    on_refresh = function(my_arc)
+      my_arc:all(0)
+      my_arc:led(1, util.round(params:get_raw(get_current_page_param_id(1))*64), 15)
+      my_arc:led(2, util.round(params:get_raw(get_current_page_param_id(2))*64), 15)
     end
-    note_slots[note] = slot
-    note_downs[voicenum] = note
-    UI.screen_dirty = true
-  end
-end
+  }
 
-local function note_off(note)
-  local slot = note_slots[note]
-  if slot then
-    voice_allocator:release(slot)
-    note_downs[slot.id] = nil
-    UI.screen_dirty = true
-  end
-end
+  UI.init_grid {
+    device = grid.connect(),
+    on_key = function(x, y, state)
+      local function gridkey_to_note(x, y, grid_width)
+        if grid_width == 16 then
+          return x * 8 + y
+        else
+          return (4+x) * 8 + y
+        end
+      end
 
-local function gridkey_to_note(x, y, grid_width)
-  if grid_width == 16 then
-    return x * 8 + y
-  else
-    return (4+x) * 8 + y
-  end
-end
+      if engine_ready then
+        local note = gridkey_to_note(x, y, UI.grid_width)
+        if state == 1 then
+          note_on(note, 5)
+        else
+          note_off(note)
+        end
 
-local function note_to_gridkey(note, grid_width)
-  if grid_width == 16 then
-    return math.floor(note/8), note % 8
-  else
-    return math.floor(note/8) - 4, note % 8
-  end
-end
+        UI.grid_dirty = true
+        UI.screen_dirty = true
+      end
+    end,
+    on_refresh = function(my_grid)
+      local function note_to_gridkey(note, grid_width)
+        if grid_width == 16 then
+          return math.floor(note/8), note % 8
+        else
+          return math.floor(note/8) - 4, note % 8
+        end
+      end
 
-local function init_engine_init_delay_metro() -- TODO: dim screen until done
-  local engine_init_delay_metro = metro.init()
-  engine_init_delay_metro.event = function()
-    engine_ready = true
+      my_grid:all(0)
+      for voicenum=1,POLYPHONY do
+        local note = note_downs[voicenum]
+        if note then
+          local x, y = note_to_gridkey(note, UI.grid_width)
+          my_grid:led(x, y, 15)
+        end
+      end
+    end
+  }
 
-    UI.set_dirty()
+  UI.init_midi {
+    device = midi.connect(),
+    on_event = function (data)
+      if engine_ready then
+        if #data == 0 then return end
+        local msg = midi.to_msg(data)
+        if msg.type == "note_off" then
+          note_off(msg.note)
+        elseif msg.type == "note_on" then
+          note_on(msg.note, msg.vel / 127)
+        end
+        UI.screen_dirty = true
+      end
+    end
+  }
 
-    engine_init_delay_metro:stop()
-  end
-  engine_init_delay_metro.time = 1
-  engine_init_delay_metro:start()
-end
+  UI.init_screen {
+    on_refresh = function()
+      redraw()
+    end
+  }
 
-local function refresh_ui()
-  if Pages.refresh(pages_state, params) then
-    UI.set_dirty()
-  end
-  UI.refresh()
-end
-
-local function init_pages()
-  local ui_params = {
+  page_params = {
     {
       {
         label="FREQ",
@@ -480,141 +505,86 @@ local function init_pages()
     }
   }
 
-  pages_state = Pages.init(ui_params, fps, params:get("page"))
-end
-
-local function init_ui_refresh_metro()
-  local ui_refresh_metro = metro.init()
-  ui_refresh_metro.event = refresh_ui
-  ui_refresh_metro.time = 1/fps
-  ui_refresh_metro:start()
-end
-
-local function init_ui()
-  UI.init_arc {
-    device = arc.connect(),
-    on_delta = function(n, delta)
-      local d
-      if pages_state.fine then
-        d = delta/5
-      else
-        d = delta
-      end
-      change_current_page_param_raw_delta(n, d/500)
-    end,
-    on_refresh = function(my_arc)
-      my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(Pages.get_current_page_param_id(pages_state, 1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(Pages.get_current_page_param_id(pages_state, 2))*64), 15)
-    end
-  }
-
-  UI.init_grid {
-    device = grid.connect(),
-    on_key = function(x, y, state)
-      if engine_ready then
-        local note = gridkey_to_note(x, y, UI.grid_width)
-        if state == 1 then
-          note_on(note, 5)
-        else
-          note_off(note)
-        end
-
-        UI.grid_dirty = true
-        UI.screen_dirty = true
-      end
-    end,
-    on_refresh = function(my_grid)
-      my_grid:all(0)
-      for voicenum=1,POLYPHONY do
-        local note = note_downs[voicenum]
-        if note then
-          local x, y = note_to_gridkey(note, UI.grid_width)
-          my_grid:led(x, y, 15)
-        end
-      end
-    end
-  }
-
-  UI.init_midi {
-    device = midi.connect(),
-    on_event = function (data)
-      if engine_ready then
-        if #data == 0 then return end
-        local msg = midi.to_msg(data)
-        if msg.type == "note_off" then
-          note_off(msg.note)
-        elseif msg.type == "note_on" then
-          note_on(msg.note, msg.vel / 127)
-        end
-        UI.screen_dirty = true
-      end
-    end
-  }
-
-  UI.init_screen {
-    on_refresh = function()
-      redraw()
-    end
-  }
-
-  init_ui_refresh_metro()
+  init_ui_update_metro()
   init_engine_init_delay_metro()
 end
 
-function init()
-  voice_allocator = Voice.new(POLYPHONY)
+function init_ui_update_metro()
+  local ui_update_metro = metro.init()
+  ui_update_metro.event = ui_update
+  ui_update_metro.time = 1/ui_get_fps()
+  ui_update_metro:start()
+end
 
-  create_modules()
-  set_static_module_params()
-  connect_modules()
-  create_macros()
+function init_engine_init_delay_metro() -- TODO: dim screen until done
+  local engine_init_delay_metro = metro.init()
+  engine_init_delay_metro.event = function()
+    engine_ready = true
 
-  init_params()
+    UI.set_dirty()
 
-  params:read()
-  params:bang()
+    engine_init_delay_metro:stop()
+  end
+  engine_init_delay_metro.time = 1
+  engine_init_delay_metro:start()
+end
 
-  init_ui()
-  init_pages()
+function note_on(note, velocity)
+  if not note_slots[note] then
+    local slot = voice_allocator:get()
+    local voicenum = slot.id
+    trig_voice(voicenum, note)
+    slot.on_release = function()
+      release_voice(voicenum)
+      note_slots[note] = nil
+    end
+    note_slots[note] = slot
+    note_downs[voicenum] = note
+    UI.set_dirty()
+  end
+end
+
+function trig_voice(voicenum, note)
+  engine.bulkset("FreqGate"..voicenum..".Gate 1 FreqGate"..voicenum..".Frequency "..to_hz(note))
+end
+
+function to_hz(note)
+  local exp = (note - 21) / 12
+  return 27.5 * 2^exp
+end
+
+function release_voice(voicenum)
+  engine.bulkset("FreqGate"..voicenum..".Gate 0")
+end
+
+function note_off(note)
+  local slot = note_slots[note]
+  if slot then
+    voice_allocator:release(slot)
+    note_downs[slot.id] = nil
+    UI.set_dirty()
+  end
 end
 
 function cleanup()
   params:write()
+  save_settings()
 end
 
-function redraw()
-  Pages.redraw(pages_state, screen, UI.show_event_indicator)
-end
-
-function change_current_page_param_delta(n, delta)
-  params:delta(Pages.get_current_page_param_id(pages_state, n), delta)
-end
-
-function change_current_page_param_raw_delta(n, rawdelta)
-  local id = Pages.get_current_page_param_id(pages_state, n)
-  local val = params:get_raw(id)
-  params:set_raw(id, val+rawdelta)
-end
-
-function enc(n, delta)
-  local d
-  if pages_state.fine then
-    d = delta/5
+function load_settings()
+  local fd=io.open(norns.state.data .. SETTINGS_FILE,"r")
+  if fd then
+    io.input(fd)
+    ui_set_page(tonumber(io.read()))
+    io.close(fd)
   else
-    d = delta
-  end
-  if n == 1 then
-    mix:delta("output", d)
-    UI.screen_dirty = true
-  else
-    change_current_page_param_delta(n-1, d)
+    ui_set_page(1)
   end
 end
 
-function key(n, z)
-  if n ~= 1 then
-    Pages.nav(pages_state, n == 3, z)
-    UI.set_dirty()
-  end
+function save_settings()
+  local fd=io.open(norns.state.data .. SETTINGS_FILE,"w+")
+  io.output(fd)
+  io.write(ui_get_page() .. "\n")
+  io.close(fd)
 end
