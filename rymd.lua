@@ -176,7 +176,7 @@ local function init_params()
 end
 
 local function refresh_ui()
-  if Pages.refresh(pages_state, params) then
+  if Pages.update(pages_state) then
     UI.set_dirty()
   end
   UI.refresh()
@@ -270,7 +270,9 @@ local function init_ui()
       else
         d = delta
       end
-      change_current_page_param_raw_delta(n, d/500)
+      local id = Pages.get_current_page_param_id(pages_state, n)
+      local val = params:get_raw(id)
+      params:set_raw(id, val+d/500)
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
@@ -307,17 +309,7 @@ function cleanup()
 end
 
 function redraw()
-  Pages.redraw(pages_state, screen, UI.show_event_indicator)
-end
-
-function change_current_page_param_delta(n, delta)
-  params:delta(Pages.get_current_page_param_id(pages_state, n), delta)
-end
-
-function change_current_page_param_raw_delta(n, rawdelta)
-  local id = Pages.get_current_page_param_id(pages_state, n)
-  local val = params:get_raw(id)
-  params:set_raw(id, val+rawdelta)
+  Pages.draw(pages_state, screen, UI.show_event_indicator)
 end
 
 function enc(n, delta)
@@ -331,7 +323,7 @@ function enc(n, delta)
     mix:delta("output", d)
     UI.screen_dirty = true
   else
-    change_current_page_param_delta(n-1, d)
+    params:delta(Pages.get_current_page_param_id(pages_state, n-1), d)
   end
 end
 

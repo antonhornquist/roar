@@ -129,7 +129,7 @@ local function init_params()
 end
 
 local function refresh_ui()
-  if Pages.refresh(pages_state, params) then
+  if Pages.tick(pages_state, params) then
     UI.set_dirty()
   end
   UI.refresh()

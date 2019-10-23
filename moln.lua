@@ -5,15 +5,13 @@ engine.name = 'R'
 
 SETTINGS_FILE = "moln.data"
 
+R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 ControlSpec = require('controlspec')
 Formatters = require('formatters')
 Voice = require('voice')
-R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
-
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
-
-include('lib/common_ui') -- defines redraw, enc, key, arc_delta functions
+include('lib/common_ui') -- defines redraw, enc, key and other global functions
 
 POLYPHONY = 5
 note_downs = {}
@@ -558,8 +556,8 @@ function note_off(note)
 end
 
 function cleanup()
-  params:write()
   save_settings()
+  params:write()
 end
 
 function load_settings()
