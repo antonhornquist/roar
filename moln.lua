@@ -305,7 +305,7 @@ function init_ui()
   UI.init_arc {
     device = arc.connect(),
     on_delta = function(n, delta)
-      arc_delta(n, delta)
+      ui_arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)

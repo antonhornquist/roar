@@ -104,14 +104,6 @@ function init_params()
     end
   }
 
-  params:add_separator()
-
-  params:add {
-    type="number",
-    id="page",
-    name="Page",
-    default=1
-  }
 end
 
 function load_params()

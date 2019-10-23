@@ -5,7 +5,7 @@
 --   2. UI global is loaded with lib/ui.lua library
 --   3. a page_params global is setup in the script that includes this file. it consists of a table of tables describing which params are on what page, and provides logic for formatting param values suitable for the enlarged, paged user interface
 --
--- warning: including this file pollutes the global namespace with the following functions: redraw, enc, key, arc_delta, ui_update, ui_set_page, ui_get_page, ui_get_current_page_param_id
+-- warning: including this file pollutes the global namespace with the following functions: redraw, enc, key, ui_arc_delta, ui_update, ui_set_page, ui_get_page, ui_get_current_page_param_id
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
@@ -207,7 +207,7 @@ function key(n, z)
   fine = prev_held and next_held
 end
 
-function arc_delta(n, delta)
+function ui_arc_delta(n, delta)
   local d
   if fine then
     d = delta/5
