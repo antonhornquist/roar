@@ -123,18 +123,12 @@ function init_ui()
   UI.init_arc {
     device = arc.connect(),
     on_delta = function(n, delta)
-      local d
-      if pages_state.fine then
-        d = delta/5
-      else
-        d = delta
-      end
-      change_current_page_param_raw_delta(n, d/500)
+      ui_arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(ui_get_current_page_param_id(pages_state, 1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(ui_get_current_page_param_id(pages_state, 2))*64), 15)
+      my_arc:led(1, util.round(params:get_raw(ui_get_current_page_param_id(1))*64), 15)
+      my_arc:led(2, util.round(params:get_raw(ui_get_current_page_param_id(2))*64), 15)
     end
   }
 
@@ -179,14 +173,14 @@ function init_ui()
     }
   }
 
-  init_ui_refresh_metro()
+  init_ui_update_metro()
 end
 
-function init_ui_refresh_metro()
-  local ui_refresh_metro = metro.init()
-  ui_refresh_metro.event = refresh_ui
-  ui_refresh_metro.time = 1/ui_get_fps()
-  ui_refresh_metro:start()
+function init_ui_update_metro()
+  local ui_update_metro = metro.init()
+  ui_update_metro.event = ui_update
+  ui_update_metro.time = 1/ui_get_fps()
+  ui_update_metro:start()
 end
 
 function cleanup()
