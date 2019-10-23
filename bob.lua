@@ -8,7 +8,6 @@ SETTINGS_FILE = "bob.data"
 R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 Formatters = require('formatters')
 UI = include('lib/ui')
-Pages = include('lib/pages')
 RoarFormatters = include('lib/formatters')
 include('lib/common_ui') -- defines redraw, enc, key and other global functions
 
@@ -115,13 +114,6 @@ function init_params()
   }
 end
 
-function refresh_ui()
-  if Pages.tick(pages_state, params) then
-    UI.set_dirty()
-  end
-  UI.refresh()
-end
-
 function load_params()
   params:read()
   params:bang()
@@ -141,8 +133,8 @@ function init_ui()
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(Pages.get_current_page_param_id(pages_state, 1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(Pages.get_current_page_param_id(pages_state, 2))*64), 15)
+      my_arc:led(1, util.round(params:get_raw(ui_get_current_page_param_id(pages_state, 1))*64), 15)
+      my_arc:led(2, util.round(params:get_raw(ui_get_current_page_param_id(pages_state, 2))*64), 15)
     end
   }
 
