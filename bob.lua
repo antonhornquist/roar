@@ -185,7 +185,7 @@ end
 function init_ui_refresh_metro()
   local ui_refresh_metro = metro.init()
   ui_refresh_metro.event = refresh_ui
-  ui_refresh_metro.time = 1/fps
+  ui_refresh_metro.time = 1/ui_get_fps()
   ui_refresh_metro:start()
 end
 
