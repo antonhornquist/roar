@@ -1,5 +1,5 @@
 -- scriptname: rymd
--- v1.1.0 @jah
+-- v1.2.0 @jah
 
 engine.name = 'R'
 
