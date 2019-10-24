@@ -27,12 +27,13 @@ function init()
   connect_modules()
   create_macros()
 
-  load_settings()
-
   init_params()
+  init_ui()
+
+  load_settings()
   load_params()
 
-  init_ui()
+  run_ui_after_1_second_delay()
 end
 
 function create_modules()
@@ -296,11 +297,6 @@ function init_params()
   }
 end
 
-function load_params()
-  params:read()
-  params:bang()
-end
-
 function init_ui()
   UI.init_arc {
     device = arc.connect(),
@@ -493,16 +489,27 @@ function init_ui()
       }
     }
   }
-
-  init_ui_update_metro()
-  init_engine_init_delay_metro()
 end
 
-function init_ui_update_metro()
-  local ui_update_metro = metro.init()
-  ui_update_metro.event = ui_update
-  ui_update_metro.time = 1/ui_get_fps()
-  ui_update_metro:start()
+function load_settings()
+  local fd=io.open(norns.state.data .. SETTINGS_FILE,"r")
+  if fd then
+    io.input(fd)
+    ui_set_page(tonumber(io.read()))
+    io.close(fd)
+  else
+    ui_set_page(1)
+  end
+end
+
+function load_params()
+  params:read()
+  params:bang()
+end
+
+function run_ui_after_1_second_delay()
+  init_engine_init_delay_metro()
+  ui_run_ui()
 end
 
 function init_engine_init_delay_metro() -- TODO: dim screen until done
@@ -558,17 +565,6 @@ end
 function cleanup()
   save_settings()
   params:write()
-end
-
-function load_settings()
-  local fd=io.open(norns.state.data .. SETTINGS_FILE,"r")
-  if fd then
-    io.input(fd)
-    ui_set_page(tonumber(io.read()))
-    io.close(fd)
-  else
-    ui_set_page(1)
-  end
 end
 
 function save_settings()

@@ -207,6 +207,13 @@ function key(n, z)
   fine = prev_held and next_held
 end
 
+function ui_run_ui()
+  local ui_update_metro = metro.init()
+  ui_update_metro.event = ui_update
+  ui_update_metro.time = 1/ui_get_fps()
+  ui_update_metro:start()
+end
+
 function ui_arc_delta(n, delta)
   local d
   if fine then

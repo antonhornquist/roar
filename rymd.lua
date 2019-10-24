@@ -17,12 +17,13 @@ function init()
   set_static_module_params()
   connect_modules()
 
+  init_params()
+  init_ui()
+
+  load_params()
   load_settings()
 
-  init_params()
-  load_params()
-
-  init_ui()
+  ui_run_ui()
 end
 
 function create_modules()
@@ -176,11 +177,6 @@ function init_params()
   }
 end
 
-function load_params()
-  params:read()
-  params:bang()
-end
-
 function init_ui()
   UI.init_arc {
     device = arc.connect(),
@@ -266,20 +262,11 @@ function init_ui()
       }
     },
   }
-
-  init_ui_update_metro()
 end
 
-function init_ui_update_metro()
-  local ui_update_metro = metro.init()
-  ui_update_metro.event = ui_update
-  ui_update_metro.time = 1/ui_get_fps()
-  ui_update_metro:start()
-end
-
-function cleanup()
-  save_settings()
-  params:write()
+function load_params()
+  params:read()
+  params:bang()
 end
 
 function load_settings()
@@ -291,6 +278,11 @@ function load_settings()
   else
     ui_set_page(1)
   end
+end
+
+function cleanup()
+  save_settings()
+  params:write()
 end
 
 function save_settings()
