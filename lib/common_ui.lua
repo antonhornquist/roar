@@ -101,14 +101,15 @@ function redraw()
   end
 
   local function redraw_key2key3_widget()
-    screen.move(key2_x+(key3_x-key2_x)/2, key2_y)
+    --screen.move(126, key2_y)
+    screen.move(key2_x+42, key2_y)
     screen.level(HI_LEVEL)
-    screen.text("FINE")
+    screen.text("FN")
   end
 
   local function redraw_key2_widget()
     screen.move(key2_x, key2_y)
-    if prev_held then
+    if prev_held and not fine then
       screen.level(HI_LEVEL)
     else
       screen.level(LO_LEVEL)
@@ -118,7 +119,7 @@ function redraw()
 
   local function redraw_key3_widget()
     screen.move(key3_x, key3_y)
-    if next_held then
+    if next_held and not fine then
       screen.level(HI_LEVEL)
     else
       screen.level(LO_LEVEL)
@@ -142,10 +143,10 @@ function redraw()
 
   if fine then
     redraw_key2key3_widget()
-  else
-    redraw_key2_widget()
-    redraw_key3_widget()
   end
+
+  redraw_key2_widget()
+  redraw_key3_widget()
 
   screen.update()
 end
