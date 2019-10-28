@@ -27,6 +27,7 @@ end
 function create_modules()
   engine.new("LFO", "MultiLFO")
   engine.new("SoundIn", "SoundIn")
+  engine.new("EnvF", "EnvF")
   engine.new("FilterL", "LPLadder")
   engine.new("FilterR", "LPLadder")
   engine.new("SoundOut", "SoundOut")
@@ -35,8 +36,11 @@ end
 function connect_modules()
   engine.connect("SoundIn/Left", "FilterL/In")
   engine.connect("SoundIn/Right", "FilterR/In")
-  engine.connect("LFO/Sine", "FilterL/FM")
-  engine.connect("LFO/Sine", "FilterR/FM")
+  -- engine.connect("LFO/Sine", "FilterL/FM")
+  -- engine.connect("LFO/Sine", "FilterR/FM")
+  engine.connect("SoundIn/Left", "EnvF/In")
+  engine.connect("EnvF/Env", "FilterL/FM")
+  engine.connect("EnvF/Env", "FilterR/FM")
   engine.connect("FilterL/Out", "SoundOut/Left")
   engine.connect("FilterR/Out", "SoundOut/Right")
 end
@@ -74,6 +78,7 @@ function init_params()
     end
   }
 
+  --[[
   local lfo_rate_spec = R.specs.MultiLFO.Frequency:copy()
   lfo_rate_spec.default = 0.5
 
@@ -88,10 +93,12 @@ function init_params()
       UI.set_dirty()
     end
   }
+  ]]
 
   local lfo_to_cutoff_spec = R.specs.LPLadder.FM:copy()
   lfo_to_cutoff_spec.default = 0.1
 
+  --[[
   params:add {
     type="control",
     id="lfo_to_cutoff",
@@ -104,7 +111,72 @@ function init_params()
       UI.set_dirty()
     end
   }
+  ]]
 
+  local env_attack_spec = R.specs.ADSREnv.Attack:copy()
+  env_attack_spec.default = 100
+
+  params:add {
+    type="control",
+    id="envf_attack",
+    name="EnvF Attack",
+    controlspec=env_attack_spec, -- TODO
+    action=function (value)
+      engine.set("EnvF.Attack", value)
+      UI.set_dirty()
+    end
+  }
+
+  local env_decay_spec = R.specs.ADSREnv.Decay:copy()
+  env_decay_spec.default = 200
+
+  params:add {
+    type="control",
+    id="envf_decay",
+    name="EnvF Decay",
+    controlspec=env_decay_spec, -- TODO
+    action=function (value)
+      engine.set("EnvF.Decay", value)
+      UI.set_dirty()
+    end
+  }
+
+  params:add {
+    type="control",
+    id="envf_sensitivity",
+    name="EnvF Sensitivity",
+    controlspec=resonance_spec, -- TODO
+    formatter=Formatters.percentage,
+    action=function (value)
+      engine.set("EnvF.Sensitivity", value)
+      UI.set_dirty()
+    end
+  }
+
+  params:add {
+    type="control",
+    id="envf_threshold",
+    name="EnvF Threshold",
+    controlspec=resonance_spec, -- TODO
+    formatter=Formatters.percentage,
+    action=function (value)
+      engine.set("EnvF.Threshold", value)
+      UI.set_dirty()
+    end
+  }
+
+  params:add {
+    type="control",
+    id="env_to_cutoff",
+    name="Env > Cutoff",
+    controlspec=lfo_to_cutoff_spec,
+    formatter=Formatters.percentage,
+    action=function (value)
+      engine.set("FilterL.FM", value)
+      engine.set("FilterR.FM", value)
+      UI.set_dirty()
+    end
+  }
 end
 
 function init_ui()
@@ -143,6 +215,7 @@ function init_ui()
         end
       }
     },
+    --[[
     {
       {
         label="LFO",
@@ -154,6 +227,39 @@ function init_ui()
       {
         label="L>FRQ",
         id="lfo_to_cutoff",
+        value=function(id)
+          return RoarFormatters.percentage(params:get(id))
+        end
+      }
+    }
+    ]]
+    {
+      {
+        label="E.ATK",
+        id="envf_attack",
+        value=function(id)
+          return RoarFormatters.adaptive_time(params:get(id))
+        end
+      },
+      {
+        label="E.DEC",
+        id="envf_decay",
+        value=function(id)
+          return RoarFormatters.adaptive_time(params:get(id))
+        end
+      },
+    },
+    {
+      {
+        label="E.SNS",
+        id="envf_sensitivity",
+        value=function(id)
+          return RoarFormatters.percentage(params:get(id))
+        end
+      },
+      {
+        label="E>FRQ",
+        id="env_to_cutoff",
         value=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
