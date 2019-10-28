@@ -136,6 +136,17 @@ function redraw()
     redraw_event_flash_widget()
   end
 
+  if enc2_value then
+    local y = enc2_y - (enc2_value * 12*2)
+    print(enc2_value .. ": " .. y)
+    screen.level(LO_LEVEL)
+    screen.rect(enc2_x - 4, y, 2, 2)
+    screen.fill()
+  end
+
+  if enc3_value then
+  end
+
   redraw_enc2_widget()
   redraw_enc3_widget()
 

@@ -6,6 +6,7 @@ engine.name = 'R'
 SETTINGS_FILE = "bob.data"
 
 R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
+ControlSpec = require('controlspec')
 Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
@@ -13,6 +14,7 @@ include('lib/common_ui') -- defines redraw, enc, key and other global functions
 
 function init()
   create_modules()
+  set_static_module_params()
   connect_modules()
 
   init_params()
@@ -21,6 +23,15 @@ function init()
   load_settings()
   load_params()
 
+  engine.tapoutlet(0, "ModMix/Out") -- TODO: should be indexed from 1
+  enc2_value = 0
+  local poll = poll.set("tap1", function(value)
+    -- if ui_get_current_page_param_id(1) ==  TODO
+    enc2_value = value
+    UI.set_dirty()
+  end)
+  poll:start()
+
   ui_run_ui()
 end
 
@@ -28,19 +39,26 @@ function create_modules()
   engine.new("LFO", "MultiLFO")
   engine.new("SoundIn", "SoundIn")
   engine.new("EnvF", "EnvF")
+  engine.new("ModMix", "LinMixer")
   engine.new("FilterL", "LPLadder")
   engine.new("FilterR", "LPLadder")
   engine.new("SoundOut", "SoundOut")
 end
 
+function set_static_module_params()
+  engine.set("FilterL.FM", 1)
+  engine.set("FilterR.FM", 1)
+  engine.set("ModMix.Out", 1)
+end
+
 function connect_modules()
   engine.connect("SoundIn/Left", "FilterL/In")
   engine.connect("SoundIn/Right", "FilterR/In")
-  -- engine.connect("LFO/Sine", "FilterL/FM")
-  -- engine.connect("LFO/Sine", "FilterR/FM")
+  engine.connect("LFO/Sine", "ModMix/In1")
   engine.connect("SoundIn/Left", "EnvF/In")
-  engine.connect("EnvF/Env", "FilterL/FM")
-  engine.connect("EnvF/Env", "FilterR/FM")
+  engine.connect("EnvF/Env", "ModMix/In2")
+  engine.connect("ModMix/Out", "FilterL/FM")
+  engine.connect("ModMix/Out", "FilterR/FM")
   engine.connect("FilterL/Out", "SoundOut/Left")
   engine.connect("FilterR/Out", "SoundOut/Right")
 end
@@ -78,7 +96,6 @@ function init_params()
     end
   }
 
-  --[[
   local lfo_rate_spec = R.specs.MultiLFO.Frequency:copy()
   lfo_rate_spec.default = 0.5
 
@@ -93,12 +110,10 @@ function init_params()
       UI.set_dirty()
     end
   }
-  ]]
 
-  local lfo_to_cutoff_spec = R.specs.LPLadder.FM:copy()
+  local lfo_to_cutoff_spec = R.specs.LinMixer.In1
   lfo_to_cutoff_spec.default = 0.1
 
-  --[[
   params:add {
     type="control",
     id="lfo_to_cutoff",
@@ -106,15 +121,13 @@ function init_params()
     controlspec=lfo_to_cutoff_spec,
     formatter=Formatters.percentage,
     action=function (value)
-      engine.set("FilterL.FM", value)
-      engine.set("FilterR.FM", value)
+      engine.set("ModMix.In1", value)
       UI.set_dirty()
     end
   }
-  ]]
 
   local env_attack_spec = R.specs.ADSREnv.Attack:copy()
-  env_attack_spec.default = 100
+  env_attack_spec.default = 50
 
   params:add {
     type="control",
@@ -128,7 +141,7 @@ function init_params()
   }
 
   local env_decay_spec = R.specs.ADSREnv.Decay:copy()
-  env_decay_spec.default = 200
+  env_decay_spec.default = 100
 
   params:add {
     type="control",
@@ -145,7 +158,7 @@ function init_params()
     type="control",
     id="envf_sensitivity",
     name="EnvF Sensitivity",
-    controlspec=resonance_spec, -- TODO
+    controlspec=ControlSpec.new(0, 1), -- TODO
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("EnvF.Sensitivity", value)
@@ -153,27 +166,17 @@ function init_params()
     end
   }
 
-  params:add {
-    type="control",
-    id="envf_threshold",
-    name="EnvF Threshold",
-    controlspec=resonance_spec, -- TODO
-    formatter=Formatters.percentage,
-    action=function (value)
-      engine.set("EnvF.Threshold", value)
-      UI.set_dirty()
-    end
-  }
+  local env_to_cutoff_spec = R.specs.LinMixer.In2
+  env_to_cutoff_spec.default = 0.1
 
   params:add {
     type="control",
     id="env_to_cutoff",
     name="Env > Cutoff",
-    controlspec=lfo_to_cutoff_spec,
+    controlspec=env_to_cutoff_spec,
     formatter=Formatters.percentage,
     action=function (value)
-      engine.set("FilterL.FM", value)
-      engine.set("FilterR.FM", value)
+      engine.set("ModMix.In2", value)
       UI.set_dirty()
     end
   }
@@ -215,7 +218,6 @@ function init_ui()
         end
       }
     },
-    --[[
     {
       {
         label="LFO",
@@ -231,8 +233,7 @@ function init_ui()
           return RoarFormatters.percentage(params:get(id))
         end
       }
-    }
-    ]]
+    },
     {
       {
         label="E.ATK",
