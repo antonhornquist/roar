@@ -1,6 +1,23 @@
 ---
 ---
 
+# Bob
+
+Lowpass filter with LFO modulation
+
+## Operation
+
+![screenshot](screen/bob.png)
+
+- `ENC1` adjusts main output level.
+- `ENC2` changes filter cutoff.
+- `ENC3` changes filter resonance.
+- `KEY2` momentary makes `ENC2` and `ENC3` control lfo rate and depth.
+- `ARC` first two encoders act as norns `ENC2` and `ENC3`.
+
+---
+---
+
 # Moln
 
 Polyphonic subtractive synthesizer
@@ -43,3 +60,34 @@ Parameters are available in the global parameters list:
 - `Env Sustain` - 0...100%. ADSR envelope sustain level.
 - `Env Release` - ADSR envelope release time.
 
+---
+---
+
+# Rymd
+
+Delay
+
+## Operation
+
+![screenshot](screen/rymd.png)
+
+- `ENC1` adjusts main output level.
+- `ENC2` changes delay time.
+- `ENC3` changes feedback.
+- `ARC` first two encoders act as norns `ENC2` and `ENC3`.
+
+---
+---
+
+# Skev
+
+Pitch and frequency shifter
+
+## Operation
+
+![screenshot](screen/skev.png)
+
+- `ENC1` adjusts main output level.
+- `ENC2` changes frequency shift.
+- `ENC3` changes pitch ratio.
+- `ARC` first two encoders act as norns `ENC2` and `ENC3`.
