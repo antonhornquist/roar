@@ -138,7 +138,7 @@ function redraw()
 
   if enc2_value then
     local y = enc2_y - (enc2_value * 12*2)
-    print(enc2_value .. ": " .. y)
+    -- print(enc2_value, y)
     screen.level(LO_LEVEL)
     screen.rect(enc2_x - 4, y, 2, 2)
     screen.fill()
