@@ -23,11 +23,13 @@ function init()
   load_settings()
   load_params()
 
-  engine.tapoutlet(0, "ModMix/Out") -- TODO: should be indexed from 1
+  engine.pollvisual(0, "FilterL.Frequency") -- TODO: should be indexed from 1
   enc2_value = 0
-  local poll = poll.set("tap1", function(value)
+  local poll = poll.set("poll1", function(value)
     -- if ui_get_current_page_param_id(1) ==  TODO
-    enc2_value = value
+    local frequency_spec = R.specs.LPLadder.Frequency
+    -- print(value, frequency_spec:unmap(value))
+    enc2_value = frequency_spec:unmap(value)
     UI.set_dirty()
   end)
   poll:start()
