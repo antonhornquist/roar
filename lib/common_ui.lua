@@ -30,10 +30,22 @@ function redraw()
   local enc1_y = 12
 
   local enc2_x = 10
-  local enc2_y = 31 -- 33
+  local enc2_y = 29 -- 31 -- 33
+
+  local enc2_ind_x = enc2_x + 1 - 2
+  local enc2_ind_y = enc2_y + 14
 
   local enc3_x = enc2_x+65
   local enc3_y = enc2_y
+  local enc3_ind_x = enc3_x + 1 - 2
+  local enc3_ind_y = enc3_y + 14
+
+  local enc3_ind_x = enc3_x + 1 - 2
+  local enc3_ind_y = enc3_y + 14
+  local enc3_ind_width = 32 + 2 + 2
+
+  local ind_width = 32 + 2 + 2
+  local page_indicator_y = enc2_y + 16 + 3
 
   local key2_x = 0
   local key2_y = 63
@@ -96,7 +108,7 @@ function redraw()
   local function redraw_page_indicator()
     local div = 128/num_pages()
     screen.level(LO_LEVEL)
-    screen.rect(util.round((current_page-1)*div), enc2_y+15+1, util.round(div), 2)
+    screen.rect(util.round((current_page-1)*div), page_indicator_y, util.round(div), 2)
     screen.fill()
   end
 
@@ -136,15 +148,44 @@ function redraw()
     redraw_event_flash_widget()
   end
 
-  if enc2_value then
-    local y = enc2_y + 12 - (enc2_value * 12*2)
-    -- print(enc2_value, y)
-    screen.level(LO_LEVEL)
-    screen.rect(enc2_x - 4, y, 2, 2)
+  local function bullet(x, y, level)
+    screen.level(level)
+    screen.rect(x, y, 2, 2)
     screen.fill()
   end
 
-  if enc3_value then
+  local function draw_value(ind_x, ind_y, v, level)
+    local x = ind_x + 2 + (ind_width-4) * v
+    bullet(x, ind_y, level)
+  end
+
+  if show_enc2_value then
+    -- bullet(enc2_ind_x, enc2_ind_y, 1)
+    -- bullet(enc2_ind_x + ind_width, enc2_ind_y, 1)
+
+    if enc2_value then
+      draw_value(enc2_ind_x, enc2_ind_y, enc2_value, LO_LEVEL)
+    end
+
+    if enc2_values then
+      for idx=1, #enc2_values do
+        draw_value(enc2_ind_x, enc2_ind_y, enc2_values[idx], util.round(LO_LEVEL*1/5*idx))
+      end
+    end
+
+    if enc2_ref then
+      draw_value(enc2_ind_x, enc2_ind_y, enc2_ref, HI_LEVEL)
+    end
+  end
+
+  if show_enc3_value then
+    if enc3_value then
+      draw_value(enc3_ind_x, enc3_ind_y, enc3_value, LO_LEVEL)
+    end
+
+    if enc3_ref then
+      draw_value(enc3_ind_x, enc3_ind_y, enc3_ref, HI_LEVEL)
+    end
   end
 
   redraw_enc2_widget()

@@ -12,6 +12,9 @@ UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 include('lib/common_ui') -- defines redraw, enc, key and other global functions
 
+local filter_spec
+local resonance_spec
+
 function init()
   create_modules()
   set_static_module_params()
@@ -24,12 +27,27 @@ function init()
   load_params()
 
   engine.pollvisual(0, "FilterL.Frequency") -- TODO: should be indexed from 1
-  enc2_value = 0
+
+  enc2_values = {}
   local poll = poll.set("poll1", function(value)
-    -- if ui_get_current_page_param_id(1) ==  TODO
-    local frequency_spec = R.specs.LPLadder.Frequency
-    -- print(value, frequency_spec:unmap(value))
-    enc2_value = frequency_spec:unmap(value)
+    if ui_get_current_page_param_id(1) == "cutoff" then
+      show_enc2_value = true
+      --[[
+      enc2_value = filter_spec:unmap(value)
+      ]]
+      if #enc2_values > 5 then
+        table.remove(enc2_values, 1)
+      end
+      --table.remove(enc2_values, 1)
+      table.insert(enc2_values, filter_spec:unmap(value))
+      enc2_ref = filter_spec:unmap(params:get("cutoff"))
+
+      show_enc3_value = true
+      enc3_ref = resonance_spec:unmap(params:get("resonance"))
+    else
+      show_enc2_value = false
+      show_enc3_value = false
+    end
     UI.set_dirty()
   end)
   poll:start()
@@ -66,8 +84,9 @@ function connect_modules()
 end
 
 function init_params()
-  local filter_spec = R.specs.LPLadder.Frequency:copy()
+  filter_spec = R.specs.LPLadder.Frequency:copy()
   filter_spec.default = 1000
+  filter_spec.minval = 20
   filter_spec.maxval = 10000
 
   params:add {
@@ -82,7 +101,7 @@ function init_params()
     end
   }
 
-  local resonance_spec = R.specs.LPLadder.Resonance:copy()
+  resonance_spec = R.specs.LPLadder.Resonance:copy()
   resonance_spec.default = 0.5
 
   params:add {
