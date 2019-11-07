@@ -153,14 +153,14 @@ function init_ui()
       {
         label="P.SHIFT",
         id="pitch_ratio",
-        value=function(id)
+        format=function(id)
           return params:string(id)
         end
       },
       {
         label="F.SHIFT",
         id="freq_shift",
-        value=function(id)
+        format=function(id)
           return params:string(id)
         end
       }
@@ -169,14 +169,14 @@ function init_ui()
       {
         label="P.DISP",
         id="pitch_dispersion",
-        value=function(id)
+        format=function(id)
           return params:string(id)
         end
       },
       {
         label="T.DISP",
         id="time_dispersion",
-        value=function(id)
+        format=function(id)
           return params:string(id)
         end
       }
@@ -185,14 +185,14 @@ function init_ui()
       {
         label="LFO.HZ",
         id="lfo_rate",
-        value=function(id)
+        format=function(id)
           return params:string(id)
         end
       },
       {
         label="L.SHP",
         id="lfo_rate",
-        value=function(id)
+        format=function(id)
           return params:string(id)
         end
       }
@@ -201,14 +201,14 @@ function init_ui()
       {
         label=">P.RAT",
         id="lfo_to_pitch_ratio",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       },
       {
         label=">F.SHFT",
         id="lfo_to_freq_shift",
-        value=function(id)
+        format=function(id)
           return params:string(id)
         end
       }

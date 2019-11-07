@@ -201,14 +201,14 @@ function init_ui()
       {
         label="DIR",
         id="direct",
-        value=function(id)
+        format=function(id)
           return params:get(id)
         end
       },
       {
         label="SEND",
         id="delay_send",
-        value=function(id)
+        format=function(id)
           return params:get(id)
         end
       }
@@ -217,14 +217,14 @@ function init_ui()
       {
         label="L.TIME",
         id="delay_time_left",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
         end
       },
       {
         label="R.TIME",
         id="delay_time_right",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
         end
       }
@@ -233,14 +233,14 @@ function init_ui()
       {
         label="DAMP",
         id="damping",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
         end
       },
       {
         label="FBK",
         id="feedback",
-        value=function(id)
+        format=function(id)
           return params:get(id)
         end
       }
@@ -249,14 +249,14 @@ function init_ui()
       {
         label="RATE",
         id="mod_rate",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
         end
       },
       {
         label="MOD",
         id="delay_time_mod_depth",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       }

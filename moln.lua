@@ -380,14 +380,14 @@ function init_ui()
       {
         label="FREQ",
         id="filter_frequency",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
         end
       },
       {
         label="RES",
         id="filter_resonance",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       }
@@ -396,14 +396,14 @@ function init_ui()
       {
         label="A.RNG",
         id="osc_a_range",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.range(params:get(id))
         end
       },
       {
         label="B.RNG",
         id="osc_b_range",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.range(params:get(id))
         end
       }
@@ -412,14 +412,14 @@ function init_ui()
       {
         label="A.PW",
         id="osc_a_pulsewidth",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       },
       {
         label="B.PW",
         id="osc_b_pulsewidth",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       }
@@ -428,14 +428,14 @@ function init_ui()
       {
         label="DETUN",
         id="osc_detune",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       },
       {
         label="LFO",
         id="lfo_frequency",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
         end
       },
@@ -444,14 +444,14 @@ function init_ui()
       {
         label="PWM",
         id="lfo_to_osc_pwm",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       },
       {
         label="E>FIL",
         id="env_to_filter_fm",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       },
@@ -460,14 +460,14 @@ function init_ui()
       {
         label="E.ATK",
         id="env_attack",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
         end
       },
       {
         label="E.DEC",
         id="env_decay",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
         end
       },
@@ -476,14 +476,14 @@ function init_ui()
       {
         label="E.SUS",
         id="env_sustain",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       },
       {
         label="E.REL",
         id="env_release",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
         end
       }

@@ -32,19 +32,17 @@ function redraw()
   local enc2_x = 10
   local enc2_y = 29 -- 31 -- 33
 
-  local enc2_ind_x = enc2_x + 1 - 2
-  local enc2_ind_y = enc2_y + 14
+  -- TODO: remove local enc2_ind_x = enc2_x + 1 - 2
+  -- TODO: remove local enc2_ind_y = enc2_y + 14
+
+  local ind_width = 32 + 2 + 2
 
   local enc3_x = enc2_x+65
   local enc3_y = enc2_y
-  local enc3_ind_x = enc3_x + 1 - 2
-  local enc3_ind_y = enc3_y + 14
 
-  local enc3_ind_x = enc3_x + 1 - 2
-  local enc3_ind_y = enc3_y + 14
-  local enc3_ind_width = 32 + 2 + 2
+  -- TODO: remove local enc3_ind_x = enc3_x + 1 - 2
+  -- TODO: remove local enc3_ind_y = enc3_y + 14
 
-  local ind_width = 32 + 2 + 2
   local page_indicator_y = enc2_y + 16 + 3
 
   local key2_x = 0
@@ -69,6 +67,17 @@ function redraw()
     screen.fill()
   end
 
+  local function bullet(x, y, level)
+    screen.level(level)
+    screen.rect(x, y, 2, 2)
+    screen.fill()
+  end
+
+  local function draw_value(ind_x, ind_y, v, level)
+    local x = ind_x + 2 + (ind_width-4) * v
+    bullet(x, ind_y, level)
+  end
+
   local function draw_ui_param(page, param_index, x, y)
     local ui_param = page_params[page][param_index]
     screen.move(x, y)
@@ -76,7 +85,32 @@ function redraw()
     screen.text(ui_param.label)
     screen.move(x, y+12)
     screen.level(HI_LEVEL)
-    screen.text(ui_param.value(ui_param.id))
+    screen.text(ui_param.format(ui_param.id))
+
+    local ind_x = x + 1 - 2
+    local ind_y = y + 14
+
+    local ind_value = ui_param.ind_value
+    local ind_values = ui_param.ind_values
+    local ind_ref = ui_param.ind_ref
+
+    -- bullet(ind_x, ind_y, HI_LEVEL)
+    -- bullet(ind_x + ind_width, ind_y, HI_LEVEL)
+
+    if ind_value then
+      draw_value(ind_x, ind_y, ind_value, LO_LEVEL)
+    end
+
+    if ind_values then
+      local max_level = LO_LEVEL
+      for idx=1, #ind_values do
+        draw_value(ind_x, ind_y, ind_values[idx], util.round(max_level*1/5*idx))
+      end
+    end
+
+    if ind_ref then
+      draw_value(ind_x, ind_y, ind_ref, HI_LEVEL)
+    end
   end
 
   local function redraw_enc2_widget()
@@ -90,6 +124,7 @@ function redraw()
     if left ~= right then
       draw_ui_param(right, 1, enc2_x+128-pixel_ofs, enc2_y)
     end
+
   end
 
   local function redraw_enc3_widget()
@@ -146,46 +181,6 @@ function redraw()
 
   if UI.show_event_indicator then
     redraw_event_flash_widget()
-  end
-
-  local function bullet(x, y, level)
-    screen.level(level)
-    screen.rect(x, y, 2, 2)
-    screen.fill()
-  end
-
-  local function draw_value(ind_x, ind_y, v, level)
-    local x = ind_x + 2 + (ind_width-4) * v
-    bullet(x, ind_y, level)
-  end
-
-  if show_enc2_value then
-    -- bullet(enc2_ind_x, enc2_ind_y, 1)
-    -- bullet(enc2_ind_x + ind_width, enc2_ind_y, 1)
-
-    if enc2_value then
-      draw_value(enc2_ind_x, enc2_ind_y, enc2_value, LO_LEVEL)
-    end
-
-    if enc2_values then
-      for idx=1, #enc2_values do
-        draw_value(enc2_ind_x, enc2_ind_y, enc2_values[idx], util.round(LO_LEVEL*1/5*idx))
-      end
-    end
-
-    if enc2_ref then
-      draw_value(enc2_ind_x, enc2_ind_y, enc2_ref, HI_LEVEL)
-    end
-  end
-
-  if show_enc3_value then
-    if enc3_value then
-      draw_value(enc3_ind_x, enc3_ind_y, enc3_value, LO_LEVEL)
-    end
-
-    if enc3_ref then
-      draw_value(enc3_ind_x, enc3_ind_y, enc3_ref, HI_LEVEL)
-    end
   end
 
   redraw_enc2_widget()

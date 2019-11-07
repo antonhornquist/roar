@@ -19,6 +19,7 @@ function init()
   create_modules()
   set_static_module_params()
   connect_modules()
+  init_polls()
 
   init_params()
   init_ui()
@@ -26,31 +27,7 @@ function init()
   load_settings()
   load_params()
 
-  engine.pollvisual(0, "FilterL.Frequency") -- TODO: should be indexed from 1
-
-  enc2_values = {}
-  local poll = poll.set("poll1", function(value)
-    if ui_get_current_page_param_id(1) == "cutoff" then
-      show_enc2_value = true
-      --[[
-      enc2_value = filter_spec:unmap(value)
-      ]]
-      if #enc2_values > 5 then
-        table.remove(enc2_values, 1)
-      end
-      --table.remove(enc2_values, 1)
-      table.insert(enc2_values, filter_spec:unmap(value))
-      enc2_ref = filter_spec:unmap(params:get("cutoff"))
-
-      show_enc3_value = true
-      enc3_ref = resonance_spec:unmap(params:get("resonance"))
-    else
-      show_enc2_value = false
-      show_enc3_value = false
-    end
-    UI.set_dirty()
-  end)
-  poll:start()
+  cutoff_poll:start()
 
   ui_run_ui()
 end
@@ -83,6 +60,25 @@ function connect_modules()
   engine.connect("FilterR/Out", "SoundOut/Right")
 end
 
+function init_polls()
+  engine.pollvisual(0, "FilterL.Frequency") -- TODO: should be indexed from 1
+
+  cutoff_poll = poll.set("poll1", function(value)
+    -- page_params[1][1].ind_value = filter_spec:unmap(value)
+
+    local ind_values = page_params[1][1].ind_values
+
+    if #ind_values > 5 then
+      table.remove(ind_values, 1)
+    end
+    --table.remove(ind_values, 1)
+    table.insert(ind_values, filter_spec:unmap(value))
+
+    UI.set_dirty()
+  end)
+
+end
+
 function init_params()
   filter_spec = R.specs.LPLadder.Frequency:copy()
   filter_spec.default = 1000
@@ -97,6 +93,7 @@ function init_params()
     action=function (value)
       engine.set("FilterL.Frequency", value)
       engine.set("FilterR.Frequency", value)
+      page_params[1][1].ind_ref = params:get_raw("cutoff")
       UI.set_dirty()
     end
   }
@@ -113,6 +110,7 @@ function init_params()
     action=function (value)
       engine.set("FilterL.Resonance", value)
       engine.set("FilterR.Resonance", value)
+      page_params[1][2].ind_ref = params:get("resonance")
       UI.set_dirty()
     end
   }
@@ -128,6 +126,7 @@ function init_params()
     formatter=Formatters.round(0.001),
     action=function (value)
       engine.set("LFO.Frequency", value)
+      page_params[2][1].ind_ref = params:get_raw("lfo_rate")
       UI.set_dirty()
     end
   }
@@ -143,6 +142,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("ModMix.In1", value)
+      page_params[2][2].ind_ref = params:get_raw("lfo_to_cutoff")
       UI.set_dirty()
     end
   }
@@ -157,6 +157,7 @@ function init_params()
     controlspec=env_attack_spec, -- TODO
     action=function (value)
       engine.set("EnvF.Attack", value)
+      page_params[3][1].ind_ref = params:get_raw("envf_attack")
       UI.set_dirty()
     end
   }
@@ -171,6 +172,7 @@ function init_params()
     controlspec=env_decay_spec, -- TODO
     action=function (value)
       engine.set("EnvF.Decay", value)
+      page_params[3][2].ind_ref = params:get_raw("envf_decay")
       UI.set_dirty()
     end
   }
@@ -183,6 +185,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("EnvF.Sensitivity", value)
+      page_params[4][1].ind_ref = params:get_raw("envf_sensitivity")
       UI.set_dirty()
     end
   }
@@ -198,6 +201,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("ModMix.In2", value)
+      page_params[4][2].ind_ref = params:get_raw("env_to_cutoff")
       UI.set_dirty()
     end
   }
@@ -225,32 +229,35 @@ function init_ui()
   page_params = {
     {
       {
-        label="FREQ",
+        label="CUTOFF",
         id="cutoff",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
-        end
+        end,
+        ind_values = {}
       },
       {
         label="RES",
         id="resonance",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
-        end
+        end,
+        ind_ref = resonance_spec:unmap(params:get("resonance"))
       }
     },
     {
       {
         label="LFO",
         id="lfo_rate",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
-        end
+        end,
+        ind_ref = params:get_raw("lfo_rate")
       },
       {
         label="L>FRQ",
         id="lfo_to_cutoff",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       }
@@ -259,14 +266,14 @@ function init_ui()
       {
         label="E.ATK",
         id="envf_attack",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
         end
       },
       {
         label="E.DEC",
         id="envf_decay",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
         end
       },
@@ -275,14 +282,14 @@ function init_ui()
       {
         label="E.SNS",
         id="envf_sensitivity",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       },
       {
         label="E>FRQ",
         id="env_to_cutoff",
-        value=function(id)
+        format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       }
