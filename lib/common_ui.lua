@@ -9,7 +9,7 @@
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
-local FPS = 120
+local FPS = 45 -- 120
 
 local fine = false
 local prev_held = false
