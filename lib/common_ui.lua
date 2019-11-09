@@ -9,7 +9,7 @@
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
-local FPS = 45 -- 120
+local FPS = 30 -- TODO 45 -- 120
 
 local fine = false
 local prev_held = false
@@ -35,7 +35,7 @@ function redraw()
   -- TODO: remove local enc2_ind_x = enc2_x + 1 - 2
   -- TODO: remove local enc2_ind_y = enc2_y + 14
 
-  local ind_width = 32 + 2 + 2
+  -- TODO local ind_width = 32 + 2 + 2
 
   local enc3_x = enc2_x+65
   local enc3_y = enc2_y
@@ -73,8 +73,9 @@ function redraw()
     screen.fill()
   end
 
-  local function draw_value(ind_x, ind_y, v, level)
-    local x = ind_x + 2 + (ind_width-4) * v
+  local function draw_value(ind_x, ind_y, v, level, width)
+    -- local x = ind_x + 2 + width-4 * v
+    local x = ind_x + (width-2) * v
     bullet(x, ind_y, level)
   end
 
@@ -87,29 +88,29 @@ function redraw()
     screen.level(HI_LEVEL)
     screen.text(ui_param.format(ui_param.id))
 
-    local ind_x = x + 1 - 2
+    local ind_x = x + 1
     local ind_y = y + 14
 
     local ind_value = ui_param.ind_value
     local ind_values = ui_param.ind_values
     local ind_ref = ui_param.ind_ref
+    local ind_width = ui_param.ind_width
 
-    -- bullet(ind_x, ind_y, HI_LEVEL)
-    -- bullet(ind_x + ind_width, ind_y, HI_LEVEL)
+    local label_width = s_extents(ui_param.label)
 
     if ind_value then
-      draw_value(ind_x, ind_y, ind_value, LO_LEVEL)
+      draw_value(ind_x, ind_y, ind_value, LO_LEVEL, label_width)
     end
 
     if ind_values then
       local max_level = LO_LEVEL
       for idx=1, #ind_values do
-        draw_value(ind_x, ind_y, ind_values[idx], util.round(max_level*1/5*idx))
+        draw_value(ind_x, ind_y, ind_values[idx], util.round(max_level*1/5*idx), label_width)
       end
     end
 
     if ind_ref then
-      draw_value(ind_x, ind_y, ind_ref, HI_LEVEL)
+      draw_value(ind_x, ind_y, ind_ref, HI_LEVEL, label_width)
     end
   end
 
@@ -142,7 +143,9 @@ function redraw()
     
   local function redraw_page_indicator()
     local div = 128/num_pages()
+
     screen.level(LO_LEVEL)
+
     screen.rect(util.round((current_page-1)*div), page_indicator_y, util.round(div), 2)
     screen.fill()
   end
@@ -258,7 +261,7 @@ end
 function ui_run_ui()
   local ui_update_metro = metro.init()
   ui_update_metro.event = ui_update
-  ui_update_metro.time = 1/ui_get_fps()
+  ui_update_metro.time = 1/FPS
   ui_update_metro:start()
 end
 

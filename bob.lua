@@ -77,6 +77,7 @@ function init_polls()
     UI.set_dirty()
   end)
 
+  cutoff_poll.time = 1/ui_get_fps()
 end
 
 function init_params()
