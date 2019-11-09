@@ -16,9 +16,7 @@ local filter_spec
 local resonance_spec
 
 function init()
-  create_modules()
-  set_static_module_params()
-  connect_modules()
+  init_r()
   init_polls()
 
   init_params()
@@ -30,6 +28,14 @@ function init()
   cutoff_poll:start()
 
   ui_run_ui()
+end
+
+function init_r()
+  create_modules()
+  set_static_module_params()
+  connect_modules()
+
+  engine.pollvisual(0, "FilterL.Frequency") -- TODO: should be indexed from 1
 end
 
 function create_modules()
@@ -61,8 +67,6 @@ function connect_modules()
 end
 
 function init_polls()
-  engine.pollvisual(0, "FilterL.Frequency") -- TODO: should be indexed from 1
-
   cutoff_poll = poll.set("poll1", function(value)
     -- page_params[1][1].ind_value = filter_spec:unmap(value)
 
