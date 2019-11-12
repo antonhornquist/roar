@@ -9,7 +9,7 @@
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
-local FPS = 30 -- TODO 45 -- 120
+local FPS = 30 -- 40 -- TODO 45 -- 120
 
 local fine = false
 local prev_held = false
@@ -272,7 +272,13 @@ function ui_arc_delta(n, delta)
   else
     d = delta
   end
-  local id = ui_get_current_page_param_id(n)
+  -- local id = ui_get_current_page_param_id(n)
+  local id
+  if n == 1 then
+    id = "cutoff"
+  else
+    id = "resonance"
+  end
   local val = params:get_raw(id)
   params:set_raw(id, val+d/500)
 end

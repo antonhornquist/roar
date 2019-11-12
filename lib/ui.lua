@@ -76,7 +76,7 @@ end
 
 -- event flash
 
-local EVENT_FLASH_FRAMES = 20
+local EVENT_FLASH_FRAMES = 5
 local event_flash_frame_counter = nil
 
 function UI.flash_event()
