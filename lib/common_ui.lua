@@ -96,7 +96,7 @@ function redraw()
     local ind_ref = ui_param.ind_ref
     local ind_width = ui_param.ind_width
 
-    local label_width = s_extents(ui_param.label)
+    local label_width = _norns.screen_extents(ui_param.label)
 
     if ind_value then
       draw_value(ind_x, ind_y, ind_value, LO_LEVEL, label_width)
