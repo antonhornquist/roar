@@ -10,7 +10,7 @@ ControlSpec = require('controlspec')
 Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
-include('lib/common_ui') -- defines redraw, enc, key and other global functions
+include('lib/common') -- defines redraw, enc, key and other global functions
 
 function init()
   create_modules()
@@ -20,8 +20,8 @@ function init()
   init_params()
   init_ui()
 
-  load_params()
   load_settings()
+  load_params()
 
   ui_run_ui()
 end
@@ -181,7 +181,7 @@ function init_ui()
   UI.init_arc {
     device = arc.connect(),
     on_delta = function(n, delta)
-      ui_arc_delta(n, delta)
+      arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
@@ -264,20 +264,23 @@ function init_ui()
   }
 end
 
+function load_settings()
+  local fd=io.open(norns.state.data .. SETTINGS_FILE,"r")
+  local page
+  if fd then
+    io.input(fd)
+    local str = io.read()
+    io.close(fd)
+    if str ~= "" then
+      page = tonumber(str)
+    end
+  end
+  set_page(page or 1)
+end
+
 function load_params()
   params:read()
   params:bang()
-end
-
-function load_settings()
-  local fd=io.open(norns.state.data .. SETTINGS_FILE,"r")
-  if fd then
-    io.input(fd)
-    ui_set_page(tonumber(io.read()))
-    io.close(fd)
-  else
-    ui_set_page(1)
-  end
 end
 
 function cleanup()
@@ -288,6 +291,6 @@ end
 function save_settings()
   local fd=io.open(norns.state.data .. SETTINGS_FILE,"w+")
   io.output(fd)
-  io.write(ui_get_page() .. "\n")
+  io.write(get_page() .. "\n")
   io.close(fd)
 end

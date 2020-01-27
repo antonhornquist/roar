@@ -1,29 +1,24 @@
--- common logic for unified, paged UI broken out to a shared file
+-- common logic for paged user interface broken out to a shared file
 --
 -- assumptions:
 --   1. norns globals (screen, params, %c) are defined
 --   2. UI global is loaded with lib/ui.lua library
 --   3. a page_params global is setup in the script that includes this file. it consists of a table of tables describing which params are on what page, and provides logic for formatting param values suitable for the enlarged, paged user interface
 --
--- warning: including this file pollutes the global namespace with the following functions: redraw, enc, key, ui_arc_delta, ui_update, ui_set_page, ui_get_page, ui_get_current_page_param_id
+-- note: this file pollutes the global namespace with functions
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
-local FPS = 30 -- 40 -- TODO 45 -- 120
+local FPS = 30
 
 local fine = false
 local prev_held = false
 local next_held = false
 
 local target_page
-local current_page
+local current_page -- can be in between two pages, if a transition is made
 local page_trans_frames
 local page_trans_div
-
-local num_pages
-local transition_to_page
-
--- global functions
 
 function redraw()
   local enc1_x = 0
@@ -115,7 +110,7 @@ function redraw()
   end
 
   local function redraw_enc2_widget()
-    local left = math.floor(current_page)
+    local left = math.floor(Current_page)
     local right = math.ceil(current_page)
     local offset = current_page - left
     local pixel_ofs = util.round(offset*128)
@@ -212,7 +207,7 @@ function enc(n, delta)
     mix:delta("output", d)
     UI.screen_dirty = true
   else
-    params:delta(ui_get_current_page_param_id(n-1), d)
+    params:delta(get_param_id_for_current_page(n-1), d)
   end
 end
 
@@ -222,7 +217,7 @@ function key(n, z)
   if target_page then
     page = target_page
   else
-    page = ui_get_page()
+    page = get_page()
   end
 
   if n == 2 then
@@ -259,26 +254,29 @@ function key(n, z)
 end
 
 function ui_run_ui()
-  local ui_update_metro = metro.init()
-  ui_update_metro.event = ui_update
-  ui_update_metro.time = 1/FPS
-  ui_update_metro:start()
+  local update_ui_metro = metro.init()
+  update_ui_metro.event = update_ui
+  update_ui_metro.time = 1/FPS
+  update_ui_metro:start()
 end
 
-function ui_arc_delta(n, delta)
+function arc_delta(n, delta)
   local d
   if fine then
     d = delta/5
   else
     d = delta
   end
-  -- local id = ui_get_current_page_param_id(n)
+  local id = get_param_id_for_current_page(n)
+  --[[
+  --TODO: bob visuals hack
   local id
   if n == 1 then
     id = "cutoff"
   else
     id = "resonance"
   end
+  ]]
   local val = params:get_raw(id)
   params:set_raw(id, val+d/500)
 end
@@ -287,7 +285,7 @@ function ui_get_fps()
   return FPS
 end
 
-function ui_update()
+function update_ui()
   if target_page then
     current_page = current_page + page_trans_div
     page_trans_frames = page_trans_frames - 1
@@ -300,20 +298,18 @@ function ui_update()
   UI.refresh()
 end
 
-function ui_set_page(page)
+function set_page(page)
   current_page = page
 end
 
-function ui_get_page()
+function get_page()
   return util.round(current_page)
 end
 
-function ui_get_current_page_param_id(n)
-  local page = ui_get_page()
+function get_param_id_for_current_page(n)
+  local page = get_page()
   return page_params[page][n].id
 end
-
--- local functions
 
 function num_pages()
   return #page_params
