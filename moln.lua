@@ -11,7 +11,7 @@ Formatters = require('formatters')
 Voice = require('voice')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
-include('lib/common') -- defines redraw, enc, key and other global functions
+include('lib/common')
 
 POLYPHONY = 5
 note_downs = {}
@@ -22,18 +22,21 @@ engine_ready = false -- TODO
 function init()
   voice_allocator = Voice.new(POLYPHONY)
 
-  create_modules()
-  set_static_module_params()
-  connect_modules()
-  create_macros()
-
+  init_r()
   init_params()
   init_ui()
 
   load_settings()
   load_params()
 
-  run_ui_after_1_second_delay()
+  start_ui_after_1_second_delay()
+end
+
+function init_r()
+  create_modules()
+  set_static_module_params()
+  connect_modules()
+  create_macros()
 end
 
 function create_modules()
@@ -305,8 +308,8 @@ function init_ui()
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(ui_get_current_page_param_id(1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(ui_get_current_page_param_id(2))*64), 15)
+      my_arc:led(1, util.round(params:get_raw(get_param_id_for_current_page(1))*64), 15)
+      my_arc:led(2, util.round(params:get_raw(get_param_id_for_current_page(2))*64), 15)
     end
   }
 
@@ -510,9 +513,9 @@ function load_params()
   params:bang()
 end
 
-function run_ui_after_1_second_delay()
+function start_ui_after_1_second_delay()
   init_engine_init_delay_metro()
-  ui_run_ui()
+  start_ui()
 end
 
 function init_engine_init_delay_metro() -- TODO: dim screen until done

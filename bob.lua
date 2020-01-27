@@ -10,12 +10,11 @@ ControlSpec = require('controlspec')
 Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
-include('lib/common') -- defines redraw, enc, key and other global functions
+include('lib/common')
 
 function init()
   init_r()
   init_polls()
-
   init_params()
   init_ui()
 
@@ -24,7 +23,7 @@ function init()
 
   cutoff_poll:start()
 
-  ui_run_ui()
+  start_ui()
 end
 
 function init_r()
@@ -65,21 +64,14 @@ end
 
 function init_polls()
   cutoff_poll = poll.set("poll1", function(value)
-    --[[
-    page_params[1][1].ind_value = filter_spec:unmap(value)
-    ]]
-
-    local ind_values = page_params[1][1].ind_values
-
-    if #ind_values > ui_get_fps()/5 then
-      table.remove(ind_values, 1)
-    end
-    table.insert(ind_values, filter_spec:unmap(value))
-
+    local cutoff_page_param = page_params[1][1]
+    local visual_values = cutoff_page_param.visual_values
+    local visual_value = filter_spec:unmap(value)
+    push_to_capped_list(visual_values, visual_value)
     UI.set_dirty()
   end)
 
-  cutoff_poll.time = 1/ui_get_fps()
+  cutoff_poll.time = 1/FPS
 end
 
 function init_params()
@@ -218,10 +210,12 @@ function init_ui()
     end,
     on_refresh = function(my_arc)
       local range = 44
+
       local function translate(n)
         n = util.round(n*range)
         return n
       end
+
       local function ring_map(n)
         if n < range/2 then
           n = 64-range/2+n
@@ -230,47 +224,49 @@ function init_ui()
         end
         return n
       end
-      my_arc:all(0)
 
-      local led1_n
-      local led2_n
-
-      --[[
-      led1_n = translate(page_params[1][1].ind_value)
-      my_arc:led(1, led1_n, 5)
-      ]]
-
-      local ind_values = page_params[1][1].ind_values
-
-      --[[
-      if ind_values then
-        local max_level = 2
-        for idx=1, #ind_values do
-          local level = util.round(max_level*1/5*idx)
-          my_arc:led(1, translate(ind_values[idx]), level)
+      local function ring_map_stroke(ring, start_n, end_n, level)
+        for n=start_n, end_n do
+          my_arc:led(ring, ring_map(n), level)
         end
       end
-      ]]
 
-      if #ind_values > 1 then
-        local max_level = 2
-        local prev_led_n = translate(ind_values[1])
-        for idx=2, #ind_values do
-          local level = util.round(max_level*1/5*idx)
-          local led_n = translate(ind_values[idx])
+      local function draw_visual_values(ring, ui_param)
+        local visual_values = ui_param.visual_values
 
-          local min_n = math.min(prev_led_n, led_n)
-          local max_n = math.max(prev_led_n, led_n)
-          for n=min_n, max_n do
-            my_arc:led(1, ring_map(n), level)
+        if visual_values then
+          if #visual_values.content > 1 then
+            local max_level = 2
+            local prev_led_n = translate(visual_values.content[1])
+            for idx=2, #visual_values.content do
+              local led_n = translate(visual_values.content[idx])
+              local min_n = math.min(prev_led_n, led_n)
+              local max_n = math.max(prev_led_n, led_n)
+
+              local level = util.round(max_level*1/5*idx)
+
+              ring_map_stroke(ring, min_n, max_n, level)
+
+              prev_led_n = led_n
+            end
           end
-          prev_led_n = led_n
         end
       end
-      -- led1_n = translate(params:get_raw(ui_get_current_page_param_id(1)))
-      -- led2_n = translate(params:get_raw(ui_get_current_page_param_id(2)))
-      led1_n = ring_map(translate(params:get_raw("cutoff")))
-      led2_n = ring_map(translate(params:get_raw("resonance")))
+
+      my_arc:all(0)
+      for n=range/2, range/2+64-range do
+        my_arc:led(1, n, 1)
+        my_arc:led(2, n, 1)
+      end
+
+      local page_param_tuple = page_params[get_page()]
+
+      draw_visual_values(1, page_param_tuple[1])
+      draw_visual_values(2, page_param_tuple[2])
+
+      local led1_n = ring_map(translate(params:get_raw(get_param_id_for_current_page(1))))
+      local led2_n = ring_map(translate(params:get_raw(get_param_id_for_current_page(2))))
+
       my_arc:led(1, led1_n, 15)
       my_arc:led(2, led2_n, 15)
 
@@ -291,15 +287,14 @@ function init_ui()
         format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
         end,
-        ind_values = {}
+        visual_values = new_capped_list(FPS/5)
       },
       {
         label="RES",
         id="resonance",
         format=function(id)
           return RoarFormatters.percentage(params:get(id))
-        end,
-        ind_ref = resonance_spec:unmap(params:get("resonance"))
+        end
       }
     },
     {
@@ -308,8 +303,7 @@ function init_ui()
         id="lfo_rate",
         format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
-        end,
-        ind_ref = params:get_raw("lfo_rate")
+        end
       },
       {
         label="L>FRQ",

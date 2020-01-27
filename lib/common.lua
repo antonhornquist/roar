@@ -1,24 +1,20 @@
--- common logic for paged user interface broken out to a shared file
---
--- assumptions:
---   1. norns globals (screen, params, %c) are defined
---   2. UI global is loaded with lib/ui.lua library
---   3. a page_params global is setup in the script that includes this file. it consists of a table of tables describing which params are on what page, and provides logic for formatting param values suitable for the enlarged, paged user interface
---
--- note: this file pollutes the global namespace with functions
+-- shared logic for paged user interface
+-- this file pollutes the global namespace
 
-local HI_LEVEL = 15
-local LO_LEVEL = 4
-local FPS = 30
+HI_LEVEL = 15
+LO_LEVEL = 4
+FPS = 25
 
-local fine = false
-local prev_held = false
-local next_held = false
+fine = false
+prev_held = false
+next_held = false
 
-local target_page
-local current_page -- can be in between two pages, if a transition is made
-local page_trans_frames
-local page_trans_div
+function start_ui()
+  local update_ui_metro = metro.init()
+  update_ui_metro.event = update_ui
+  update_ui_metro.time = 1/FPS
+  update_ui_metro:start()
+end
 
 function redraw()
   local enc1_x = 0
@@ -74,6 +70,37 @@ function redraw()
     bullet(x, ind_y, level)
   end
 
+  local function strokedraw_value(ind_x, ind_y, value1, value2, level, width)
+    -- TODO: do line instead?
+    for value=value1, value2 do
+      draw_value(ind_x, ind_y, value, level, width)
+    end
+  end
+
+  -- TODO
+  local function draw_visual_values(ind_x, ind_y, width, ui_param)
+    local visual_values = ui_param.visual_values
+
+    if visual_values then
+      if #visual_values.content > 1 then
+        local max_level = LO_LEVEL
+        local prev_visual_value = visual_values.content[1]
+        for idx=2, #visual_values.content do
+          local visual_value = visual_values.content[idx]
+
+          local min_visual_value = math.min(prev_visual_value, visual_value)
+          local max_visual_value = math.max(prev_visual_value, visual_value)
+
+          local level = util.round(max_level*1/5*idx)
+
+          strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, level, width)
+
+          prev_visual_value = visual_value
+        end
+      end
+    end
+  end
+
   local function draw_ui_param(page, param_index, x, y)
     local ui_param = page_params[page][param_index]
     screen.move(x, y)
@@ -86,23 +113,20 @@ function redraw()
     local ind_x = x + 1
     local ind_y = y + 14
 
-    local ind_value = ui_param.ind_value
-    local ind_values = ui_param.ind_values
-    local ind_ref = ui_param.ind_ref
-    local ind_width = ui_param.ind_width
+    -- TODO, see below local ind_width = ui_param.ind_width
+    local label_width = _norns.screen_extents(ui_param.label) -- TODO, cache this in ind_width or similar instead
 
-    local label_width = _norns.screen_extents(ui_param.label)
-
-    if ind_value then
-      draw_value(ind_x, ind_y, ind_value, LO_LEVEL, label_width)
-    end
-
-    if ind_values then
+    --[[
+    if visual_values then
       local max_level = LO_LEVEL
-      for idx=1, #ind_values do
-        draw_value(ind_x, ind_y, ind_values[idx], util.round(max_level*1/5*idx), label_width)
+      for idx=1, #visual_values.content do
+        draw_value(ind_x, ind_y, visual_values.content[idx], util.round(max_level*1/5*idx), label_width)
       end
     end
+    ]]
+    draw_visual_values(ind_x, ind_y, label_width, ui_param)
+
+    local ind_ref = ui_param.ind_ref
 
     if ind_ref then
       draw_value(ind_x, ind_y, ind_ref, HI_LEVEL, label_width)
@@ -110,7 +134,7 @@ function redraw()
   end
 
   local function redraw_enc2_widget()
-    local left = math.floor(Current_page)
+    local left = math.floor(current_page)
     local right = math.ceil(current_page)
     local offset = current_page - left
     local pixel_ofs = util.round(offset*128)
@@ -253,13 +277,6 @@ function key(n, z)
   fine = prev_held and next_held
 end
 
-function ui_run_ui()
-  local update_ui_metro = metro.init()
-  update_ui_metro.event = update_ui
-  update_ui_metro.time = 1/FPS
-  update_ui_metro:start()
-end
-
 function arc_delta(n, delta)
   local d
   if fine then
@@ -268,21 +285,8 @@ function arc_delta(n, delta)
     d = delta
   end
   local id = get_param_id_for_current_page(n)
-  --[[
-  --TODO: bob visuals hack
-  local id
-  if n == 1 then
-    id = "cutoff"
-  else
-    id = "resonance"
-  end
-  ]]
   local val = params:get_raw(id)
   params:set_raw(id, val+d/500)
-end
-
-function ui_get_fps()
-  return FPS
 end
 
 function update_ui()
@@ -320,3 +324,18 @@ function transition_to_page(page)
   page_trans_frames = FPS/5
   page_trans_div = (target_page - current_page) / page_trans_frames
 end
+
+function new_capped_list(capacity)
+  return {
+    capacity=capacity,
+    content={}
+  }
+end
+
+function push_to_capped_list(list, value)
+  if #list.content > list.capacity then
+    table.remove(list.content, 1)
+  end
+  table.insert(list.content, value)
+end
+

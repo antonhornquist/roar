@@ -10,20 +10,23 @@ ControlSpec = require('controlspec')
 Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
-include('lib/common') -- defines redraw, enc, key and other global functions
+include('lib/common')
 
 function init()
-  create_modules()
-  set_static_module_params()
-  connect_modules()
-
+  init_r()
   init_params()
   init_ui()
 
   load_settings()
   load_params()
 
-  ui_run_ui()
+  start_ui()
+end
+
+function init_r()
+  create_modules()
+  set_static_module_params()
+  connect_modules()
 end
 
 function create_modules()
@@ -185,8 +188,8 @@ function init_ui()
     end,
     on_refresh = function(my_arc)
       my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(ui_get_current_page_param_id(1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(ui_get_current_page_param_id(2))*64), 15)
+      my_arc:led(1, util.round(params:get_raw(get_param_id_for_current_page(1))*64), 15)
+      my_arc:led(2, util.round(params:get_raw(get_param_id_for_current_page(2))*64), 15)
     end
   }
 
