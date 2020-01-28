@@ -13,9 +13,7 @@ local update_ui
 
 function start_ui()
   local update_ui_metro = metro.init()
-
   update_ui_metro.event = update_ui
-
   update_ui_metro.time = 1/FPS
   update_ui_metro:start()
 end
@@ -87,9 +85,9 @@ function redraw()
     bullet(x, ind_y, level)
   end
 
-  local function strokedraw_value(ind_x, ind_y, value1, value2, level, width)
+  local function strokedraw_value(ind_x, ind_y, min_value, max_value, level, width)
     -- TODO: do line instead?
-    for value=value1, value2 do
+    for value=min_value, max_value do
       draw_value(ind_x, ind_y, value, level, width)
     end
   end
@@ -108,7 +106,7 @@ function redraw()
           local min_visual_value = math.min(prev_visual_value, visual_value)
           local max_visual_value = math.max(prev_visual_value, visual_value)
 
-          local level = util.round(max_level*1/5*idx)
+          local level = util.round(max_level*1/5*idx) -- TODO: what is this calculation really?
 
           strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, level, width)
 

@@ -244,7 +244,7 @@ function init_ui()
               local min_n = math.min(prev_led_n, led_n)
               local max_n = math.max(prev_led_n, led_n)
 
-              local level = util.round(max_level*1/5*idx)
+              local level = util.round(max_level*1/5*idx) -- TODO: what is this calculation really?
 
               ring_map_stroke(ring, min_n, max_n, level)
 
