@@ -1,3 +1,8 @@
+-- FIXME: upper range arc controls refactor (for other scripts)
+-- FIXME: ui params labels and adaptive formaters (for other scripts)
+-- FIXME: visual indicators for delaytime (rymd)
+-- FIXME: visual indicators for pshift, fshift (skev)
+-- FIXME: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
 -- scriptname: bob
 -- v1.2.0 @jah
 
