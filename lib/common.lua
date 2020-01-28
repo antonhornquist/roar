@@ -9,26 +9,28 @@ fine = false
 prev_held = false
 next_held = false
 
+local update_ui
+
 function start_ui()
   local update_ui_metro = metro.init()
 
-  update_ui_metro.event = function()
-    if target_page then
-      current_page = current_page + page_trans_div
-      page_trans_frames = page_trans_frames - 1
-      if page_trans_frames == 0 then
-        current_page = target_page
-        target_page = nil
-      end
-      UI.set_dirty()
-    end
-  end
-
-  UI.refresh()
-end
+  update_ui_metro.event = update_ui
 
   update_ui_metro.time = 1/FPS
   update_ui_metro:start()
+end
+
+function update_ui()
+  if target_page then
+    current_page = current_page + page_trans_div
+    page_trans_frames = page_trans_frames - 1
+    if page_trans_frames == 0 then
+      current_page = target_page
+      target_page = nil
+    end
+    UI.set_dirty()
+  end
+  UI.refresh()
 end
 
 function redraw()
