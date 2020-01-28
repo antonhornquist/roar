@@ -10,6 +10,7 @@ Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 include('lib/common')
+include('lib/common/settings')
 
 function init()
   init_r()

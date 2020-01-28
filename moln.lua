@@ -12,6 +12,7 @@ Voice = require('voice')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 include('lib/common')
+include('lib/common/settings')
 
 POLYPHONY = 5
 note_downs = {}

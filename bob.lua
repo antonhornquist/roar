@@ -288,7 +288,7 @@ function init_ui()
         format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
         end,
-        visual_values = new_capped_list(FPS/5)
+        visual_values = new_capped_list(math.floor(FPS/10))
       },
       {
         label="RES",

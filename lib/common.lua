@@ -3,7 +3,7 @@
 
 HI_LEVEL = 15
 LO_LEVEL = 4
-FPS = 25
+FPS = 35
 
 fine = false
 prev_held = false
@@ -79,16 +79,21 @@ function redraw()
     screen.fill()
   end
 
-  local function draw_value(ind_x, ind_y, v, level, width)
-    -- local x = ind_x + 2 + width-4 * v
-    local x = ind_x + (width-2) * v
+  local function translate_visual(value, indicator_width)
+    return util.round(indicator_width * value)
+  end
+
+  local function draw_value(ind_x, ind_y, ind_x_delta, level)
+    local x = ind_x + ind_x_delta
     bullet(x, ind_y, level)
   end
 
   local function strokedraw_value(ind_x, ind_y, min_value, max_value, level, width)
+    local min_ind_x_delta = translate_visual(min_value, width-2)
+    local max_ind_x_delta = translate_visual(max_value, width-2)
     -- TODO: do line instead?
-    for value=min_value, max_value do
-      draw_value(ind_x, ind_y, value, level, width)
+    for ind_x_delta=min_ind_x_delta, max_ind_x_delta do
+      draw_value(ind_x, ind_y, ind_x_delta, level)
     end
   end
 
@@ -98,7 +103,7 @@ function redraw()
 
     if visual_values then
       if #visual_values.content > 1 then
-        local max_level = LO_LEVEL
+        local max_level = 3 -- LO_LEVEL
         local prev_visual_value = visual_values.content[1]
         for idx=2, #visual_values.content do
           local visual_value = visual_values.content[idx]
@@ -132,6 +137,7 @@ function redraw()
     local label_width = _norns.screen_extents(ui_param.label) -- TODO, cache this in ind_width or similar instead
 
     --[[
+    --  TODO
     if visual_values then
       local max_level = LO_LEVEL
       for idx=1, #visual_values.content do
@@ -144,7 +150,7 @@ function redraw()
     local ind_ref = ui_param.ind_ref
 
     if ind_ref then
-      draw_value(ind_x, ind_y, ind_ref, HI_LEVEL, label_width)
+      draw_value(ind_x, ind_y, translate_visual(ind_ref, label_width), HI_LEVEL)
     end
   end
 
