@@ -494,20 +494,6 @@ function init_ui()
   }
 end
 
-function load_settings()
-  local fd=io.open(norns.state.data .. SETTINGS_FILE,"r")
-  local page
-  if fd then
-    io.input(fd)
-    local str = io.read()
-    io.close(fd)
-    if str ~= "" then
-      page = tonumber(str)
-    end
-  end
-  set_page(page or 1)
-end
-
 function load_params()
   params:read()
   params:bang()
@@ -571,11 +557,4 @@ end
 function cleanup()
   save_settings()
   params:write()
-end
-
-function save_settings()
-  local fd=io.open(norns.state.data .. SETTINGS_FILE,"w+")
-  io.output(fd)
-  io.write(get_page() .. "\n")
-  io.close(fd)
 end
