@@ -11,7 +11,22 @@ next_held = false
 
 function start_ui()
   local update_ui_metro = metro.init()
-  update_ui_metro.event = update_ui
+
+  update_ui_metro.event = function()
+    if target_page then
+      current_page = current_page + page_trans_div
+      page_trans_frames = page_trans_frames - 1
+      if page_trans_frames == 0 then
+        current_page = target_page
+        target_page = nil
+      end
+      UI.set_dirty()
+    end
+  end
+
+  UI.refresh()
+end
+
   update_ui_metro.time = 1/FPS
   update_ui_metro:start()
 end
@@ -287,19 +302,6 @@ function arc_delta(n, delta)
   local id = get_param_id_for_current_page(n)
   local val = params:get_raw(id)
   params:set_raw(id, val+d/500)
-end
-
-function update_ui()
-  if target_page then
-    current_page = current_page + page_trans_div
-    page_trans_frames = page_trans_frames - 1
-    if page_trans_frames == 0 then
-      current_page = target_page
-      target_page = nil
-    end
-    UI.set_dirty()
-  end
-  UI.refresh()
 end
 
 function set_page(page)
