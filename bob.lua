@@ -1,8 +1,9 @@
+-- FIXME: ui params labels and adaptive formatters (for other scripts)
 -- FIXME: upper range arc controls refactor (for other scripts)
--- FIXME: ui params labels and adaptive formaters (for other scripts)
 -- FIXME: visual indicators for delaytime (rymd)
 -- FIXME: visual indicators for pshift, fshift (skev)
 -- FIXME: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
+-- FIXME: range arc not 1pixel correct
 -- scriptname: bob
 -- v1.2.0 @jah
 
@@ -215,69 +216,15 @@ function init_ui()
       arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
-      local range = 44
-
-      local function translate(n)
-        n = util.round(n*range)
-        return n
-      end
-
-      local function ring_map(n)
-        if n < range/2 then
-          n = 64-range/2+n
-        else
-          n = n-range/2
-        end
-        return n
-      end
-
-      local function ring_map_stroke(ring, start_n, end_n, level)
-        for n=start_n, end_n do
-          my_arc:led(ring, ring_map(n), level)
-        end
-      end
-
-      local function draw_visual_values(ring, ui_param)
-        local visual_values = ui_param.visual_values
-
-        if visual_values then
-          if #visual_values.content > 1 then
-            local max_level = 2
-            local prev_led_n = translate(visual_values.content[1])
-            local num_visual_values = #visual_values.content
-            for idx=2, num_visual_values do
-              local led_n = translate(visual_values.content[idx])
-              local min_n = math.min(prev_led_n, led_n)
-              local max_n = math.max(prev_led_n, led_n)
-
-              -- local level = util.round(max_level*1/5*idx) -- TODO: what is this calculation really?
-              local level = util.round(max_level/num_visual_values*idx) -- TODO: what is this calculation really?
-
-              ring_map_stroke(ring, min_n, max_n, level)
-
-              prev_led_n = led_n
-            end
-          end
-        end
-      end
-
-      my_arc:all(0)
-      for n=range/2, range/2+64-range do
-        my_arc:led(1, n, 1)
-        my_arc:led(2, n, 1)
-      end
-
       local page_param_tuple = page_params[get_page()]
 
-      draw_visual_values(1, page_param_tuple[1])
-      draw_visual_values(2, page_param_tuple[2])
-
-      local led1_n = ring_map(translate(params:get_raw(get_param_id_for_current_page(1))))
-      local led2_n = ring_map(translate(params:get_raw(get_param_id_for_current_page(2))))
-
-      my_arc:led(1, led1_n, 15)
-      my_arc:led(2, led2_n, 15)
-
+      draw_arc(
+        my_arc,
+        params:get_raw(get_param_id_for_current_page(1)),
+        page_param_tuple[1].visual_values,
+        params:get_raw(get_param_id_for_current_page(2)),
+        page_param_tuple[2].visual_values
+      )
     end
   }
 
@@ -295,7 +242,7 @@ function init_ui()
         format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
         end,
-        visual_values = new_capped_list(math.floor(FPS/10))
+        visual_values = new_capped_list(util.round(FPS/20)) -- = 2
       },
       {
         label="RES",

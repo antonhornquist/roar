@@ -92,23 +92,32 @@ function redraw()
     local visual_values = ui_param.visual_values
 
     if visual_values then
-      if #visual_values.content > 1 then
-        local max_level = 3 -- LO_LEVEL
+      local max_level = 2 -- LO_LEVEL
+      local num_visual_values = #visual_values.content
+      if num_visual_values > 1 then
         local prev_visual_value = visual_values.content[1]
-        for idx=2, #visual_values.content do
+        for idx=2, num_visual_values do
           local visual_value = visual_values.content[idx]
 
           local min_visual_value = math.min(prev_visual_value, visual_value)
           local max_visual_value = math.max(prev_visual_value, visual_value)
 
-          -- local level = util.round(max_level/5*idx) -- TODO: what is this calculation really?
-          local level = util.round(max_level/num_visual_values*idx) -- TODO: what is this calculation really?
+          local level = util.round(max_level/num_visual_values*idx)
 
           strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, level, width)
 
           prev_visual_value = visual_value
         end
       end
+      --[[
+      if num_visual_values == 2 then
+        local prev_visual_value = translate_visual(visual_values.content[1], width-2)
+        local current_visual_value = translate_visual(visual_values.content[2], width-2)
+        local min_visual_value = math.min(prev_visual_value, current_visual_value)
+        local max_visual_value = math.max(prev_visual_value, current_visual_value)
+        strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, max_level, width)
+      end
+      ]]
     end
   end
 
@@ -291,6 +300,76 @@ function arc_delta(n, delta)
   local val = params:get_raw(id)
   params:set_raw(id, val+d/500)
 end
+
+function draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
+  local range = 44
+
+  local function translate(n)
+    n = util.round(n*range)
+    return n
+  end
+
+  local function ring_map(n)
+    if n < range/2 then
+      n = 64-range/2+n
+    else
+      n = n-range/2
+    end
+    return n
+  end
+
+  local function ring_map_stroke(ring, start_n, end_n, level)
+    for n=start_n, end_n do
+      my_arc:led(ring, ring_map(n), level)
+    end
+  end
+
+  local function draw_visual_values(ring, visual_values)
+    if visual_values then
+      local max_level = 2
+      local num_visual_values = #visual_values.content
+      if num_visual_values > 1 then
+        local prev_led_n = translate(visual_values.content[1])
+        for idx=2, num_visual_values do
+          local led_n = translate(visual_values.content[idx])
+          local min_n = math.min(prev_led_n, led_n)
+          local max_n = math.max(prev_led_n, led_n)
+
+          local level = util.round(max_level/num_visual_values*idx)
+
+          ring_map_stroke(ring, min_n, max_n, level)
+
+          prev_led_n = led_n
+        end
+      end
+      --[[
+      TODO
+      if num_visual_values == 2 then
+        print(ring, translate(visual_values.content[1]), translate(visual_values.content[2]), max_level)
+        ring_map_stroke(ring, translate(visual_values.content[1]), translate(visual_values.content[2]), max_level)
+      end
+      ]]
+    end
+  end
+
+  local function draw_arc_ring_leds(ring, value, visual_values)
+    print(range/2, 64-range/2)
+    for n=range/2, 64-range/2 do
+      my_arc:led(ring, n, 1)
+    end
+
+    draw_visual_values(ring, visual_values)
+
+    local led_n = ring_map(translate(value))
+
+    my_arc:led(ring, led_n, 15)
+  end
+
+  my_arc:all(0)
+  draw_arc_ring_leds(1, value1, visual_values1)
+  draw_arc_ring_leds(2, value2, visual_values2)
+end
+
 
 function set_page(page)
   current_page = page

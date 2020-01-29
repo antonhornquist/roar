@@ -188,9 +188,21 @@ function init_ui()
       arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
+      --[[
       my_arc:all(0)
       my_arc:led(1, util.round(params:get_raw(get_param_id_for_current_page(1))*64), 15)
       my_arc:led(2, util.round(params:get_raw(get_param_id_for_current_page(2))*64), 15)
+      ]]
+
+      local page_param_tuple = page_params[get_page()]
+
+      draw_arc(
+        my_arc,
+        params:get_raw(get_param_id_for_current_page(1)),
+        page_param_tuple[1].visual_values,
+        params:get_raw(get_param_id_for_current_page(2)),
+        page_param_tuple[2].visual_values
+      )
     end
   }
 
