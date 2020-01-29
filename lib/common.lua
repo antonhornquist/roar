@@ -38,16 +38,8 @@ function redraw()
   local enc2_x = 10
   local enc2_y = 29 -- 31 -- 33
 
-  -- TODO: remove local enc2_ind_x = enc2_x + 1 - 2
-  -- TODO: remove local enc2_ind_y = enc2_y + 14
-
-  -- TODO local ind_width = 32 + 2 + 2
-
   local enc3_x = enc2_x+65
   local enc3_y = enc2_y
-
-  -- TODO: remove local enc3_ind_x = enc3_x + 1 - 2
-  -- TODO: remove local enc3_ind_y = enc3_y + 14
 
   local page_indicator_y = enc2_y + 16 + 3
 
@@ -91,13 +83,11 @@ function redraw()
   local function strokedraw_value(ind_x, ind_y, min_value, max_value, level, width)
     local min_ind_x_delta = translate_visual(min_value, width-2)
     local max_ind_x_delta = translate_visual(max_value, width-2)
-    -- TODO: do line instead?
     for ind_x_delta=min_ind_x_delta, max_ind_x_delta do
       draw_value(ind_x, ind_y, ind_x_delta, level)
     end
   end
 
-  -- TODO
   local function draw_visual_values(ind_x, ind_y, width, ui_param)
     local visual_values = ui_param.visual_values
 
@@ -111,7 +101,8 @@ function redraw()
           local min_visual_value = math.min(prev_visual_value, visual_value)
           local max_visual_value = math.max(prev_visual_value, visual_value)
 
-          local level = util.round(max_level*1/5*idx) -- TODO: what is this calculation really?
+          -- local level = util.round(max_level/5*idx) -- TODO: what is this calculation really?
+          local level = util.round(max_level/num_visual_values*idx) -- TODO: what is this calculation really?
 
           strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, level, width)
 
@@ -136,15 +127,6 @@ function redraw()
     -- TODO, see below local ind_width = ui_param.ind_width
     local label_width = _norns.screen_extents(ui_param.label) -- TODO, cache this in ind_width or similar instead
 
-    --[[
-    --  TODO
-    if visual_values then
-      local max_level = LO_LEVEL
-      for idx=1, #visual_values.content do
-        draw_value(ind_x, ind_y, visual_values.content[idx], util.round(max_level*1/5*idx), label_width)
-      end
-    end
-    ]]
     draw_visual_values(ind_x, ind_y, label_width, ui_param)
 
     local ind_ref = ui_param.ind_ref

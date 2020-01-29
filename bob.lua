@@ -244,12 +244,14 @@ function init_ui()
           if #visual_values.content > 1 then
             local max_level = 2
             local prev_led_n = translate(visual_values.content[1])
-            for idx=2, #visual_values.content do
+            local num_visual_values = #visual_values.content
+            for idx=2, num_visual_values do
               local led_n = translate(visual_values.content[idx])
               local min_n = math.min(prev_led_n, led_n)
               local max_n = math.max(prev_led_n, led_n)
 
-              local level = util.round(max_level*1/5*idx) -- TODO: what is this calculation really?
+              -- local level = util.round(max_level*1/5*idx) -- TODO: what is this calculation really?
+              local level = util.round(max_level/num_visual_values*idx) -- TODO: what is this calculation really?
 
               ring_map_stroke(ring, min_n, max_n, level)
 
