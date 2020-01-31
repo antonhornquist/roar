@@ -353,7 +353,6 @@ function draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
   end
 
   local function draw_arc_ring_leds(ring, value, visual_values)
-    print(range/2, 64-range/2)
     for n=range/2, 64-range/2 do
       my_arc:led(ring, n, 1)
     end

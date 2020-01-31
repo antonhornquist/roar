@@ -1,5 +1,5 @@
+-- FIXME: arc range bug
 -- FIXME: ui params labels and adaptive formatters (for other scripts)
--- FIXME: upper range arc controls refactor (for other scripts)
 -- FIXME: visual indicators for delaytime (rymd)
 -- FIXME: visual indicators for pshift, fshift (skev)
 -- FIXME: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
@@ -242,7 +242,7 @@ function init_ui()
         format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
         end,
-        visual_values = new_capped_list(util.round(FPS/20)) -- = 2
+        visual_values = new_capped_list(util.round(FPS/20)) -- TODO = 2
       },
       {
         label="RES",

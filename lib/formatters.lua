@@ -27,7 +27,18 @@ function Formatters.range(range)
 end
 
 function Formatters.adaptive_freq(hz)
-  if hz < 1 then
+  if hz <= -1000 then
+    return util.round(hz/1000, 0.1) .. "kHz"
+  elseif hz <= -100 then
+    return util.round(hz, 1).."Hz"
+  elseif hz <= -10 then
+    return util.round(hz, 0.1).."Hz"
+  elseif hz <= -1 then
+    return util.round(hz, 0.01).."Hz"
+  elseif hz < 0 then
+    local str = tostring(util.round(hz, 0.001))
+    return "-"..string.sub(str, 3, #str).."Hz"
+  elseif hz < 1 then
     local str = tostring(util.round(hz, 0.001))
     return string.sub(str, 2, #str).."Hz"
   elseif hz < 10 then
@@ -40,6 +51,23 @@ function Formatters.adaptive_freq(hz)
     return util.round(hz/1000, 0.1) .. "kHz"
   else
     return util.round(hz/1000, 1) .. "kHz"
+  end
+end
+
+function Formatters.adaptive_db(db)
+  if db < -10 then
+    return util.round(db, 1).."dB"
+  elseif db < 0 then
+    return util.round(db, 0.1).."dB"
+  elseif db < 1 then
+    local str = tostring(util.round(db, 0.001))
+    return string.sub(str, 2, #str).."dB"
+  elseif db < 10 then
+    return util.round(db, 0.01).."dB"
+  elseif db < 100 then
+    return util.round(db, 0.1).."dB"
+  else
+    return util.round(db/1000, 1) .. "dB"
   end
 end
 

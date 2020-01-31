@@ -14,18 +14,22 @@ include('lib/common/settings')
 
 function init()
   init_r()
+  init_polls()
   init_params()
   init_ui()
 
   load_settings()
   load_params()
 
+  start_polls()
   start_ui()
 end
 
 function init_r()
   create_modules()
   connect_modules()
+  engine.pollvisual(0, "FreqShift.Frequency") -- TODO: should be indexed from 1
+  engine.pollvisual(1, "PitchShift.PitchRatio") -- TODO: should be indexed from 1
 end
 
 function create_modules()
@@ -48,7 +52,42 @@ function connect_modules()
   engine.connect("FreqShift/Right", "SoundOut/Right")
 end
 
+function init_polls()
+  freq_shift_poll = poll.set("poll1", function(value)
+    local freq_shift_page_param = page_params[1][1]
+    local visual_values = freq_shift_page_param.visual_values
+    local visual_value = R.specs.FShift.Frequency:unmap(value) -- TODO: establish visual specs in lua module
+    push_to_capped_list(visual_values, visual_value)
+    UI.set_dirty()
+  end)
+
+  freq_shift_poll.time = 1/FPS
+
+  pitch_ratio_poll = poll.set("poll2", function(value)
+    local pitch_ratio_page_param = page_params[1][2]
+    local visual_values = pitch_ratio_page_param.visual_values
+    local visual_value = R.specs.PShift.PitchRatio:unmap(value) -- TODO: establish visual specs in lua module
+    push_to_capped_list(visual_values, visual_value)
+    UI.set_dirty()
+  end)
+
+  pitch_ratio_poll.time = 1/FPS
+
+end
+
 function init_params()
+  params:add {
+    type="control",
+    id="freq_shift",
+    name="Freq Shift",
+    controlspec=R.specs.FShift.Frequency,
+    action=function (value)
+      engine.set("FreqShift.Frequency", value)
+      page_params[1][1].ind_ref = params:get_raw("freq_shift")
+      UI.set_dirty()
+    end
+  }
+
   params:add {
     type="control",
     id="pitch_ratio",
@@ -57,17 +96,7 @@ function init_params()
     controlspec=R.specs.PShift.PitchRatio,
     action=function (value)
       engine.set("PitchShift.PitchRatio", value)
-      UI.set_dirty()
-    end
-  }
-
-  params:add {
-    type="control",
-    id="freq_shift",
-    name="Freq Shift",
-    controlspec=R.specs.FShift.Frequency,
-    action=function (value)
-      engine.set("FreqShift.Frequency", value)
+      page_params[1][2].ind_ref = params:get_raw("pitch_ratio")
       UI.set_dirty()
     end
   }
@@ -80,6 +109,7 @@ function init_params()
     controlspec=R.specs.PShift.PitchDispersion,
     action=function (value)
       engine.set("PitchShift.PitchDispersion", value)
+      page_params[2][1].ind_ref = params:get_raw("pitch_dispersion")
       UI.set_dirty()
     end
   }
@@ -92,6 +122,7 @@ function init_params()
     controlspec=R.specs.PShift.TimeDispersion,
     action=function (value)
       engine.set("PitchShift.TimeDispersion", value)
+      page_params[2][2].ind_ref = params:get_raw("time_dispersion")
       UI.set_dirty()
     end
   }
@@ -104,6 +135,7 @@ function init_params()
     controlspec=R.specs.MultiLFO.Frequency,
     action=function (value)
       engine.set("LFO.Frequency", value)
+      page_params[3][1].ind_ref = params:get_raw("lfo_rate")
       UI.set_dirty()
     end
   }
@@ -116,6 +148,7 @@ function init_params()
     controlspec=R.specs.FShift.FM,
     action=function (value)
       engine.set("FreqShift.FM", value)
+      page_params[4][1].ind_ref = params:get_raw("lfo_to_freq_shift")
       UI.set_dirty()
     end
   }
@@ -128,6 +161,7 @@ function init_params()
     controlspec=R.specs.PShift.PitchRatioModulation,
     action=function (value)
       engine.set("PitchShift.PitchRatioModulation", value)
+      page_params[4][2].ind_ref = params:get_raw("lfo_to_pitch_ratio")
       UI.set_dirty()
     end
   }
@@ -140,12 +174,6 @@ function init_ui()
       arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
-      --[[
-      my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(get_param_id_for_current_page(1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(get_param_id_for_current_page(2))*64), 15)
-      ]]
-
       local page_param_tuple = page_params[get_page()]
 
       draw_arc(
@@ -167,18 +195,20 @@ function init_ui()
   page_params = {
     {
       {
-        label="P.SHIFT",
-        id="pitch_ratio",
-        format=function(id)
-          return params:string(id)
-        end
-      },
-      {
-        label="F.SHIFT",
+        label="F.SHFT",
         id="freq_shift",
         format=function(id)
-          return params:string(id)
-        end
+          return RoarFormatters.adaptive_freq(params:get(id))
+        end,
+        visual_values = new_capped_list(util.round(FPS/20)) -- TODO = 2
+      },
+      {
+        label="P.RAT",
+        id="pitch_ratio",
+        format=function(id)
+          return RoarFormatters.percentage(params:get(id))
+        end,
+        visual_values = new_capped_list(util.round(FPS/20)) -- TODO = 2
       }
     },
     {
@@ -186,14 +216,14 @@ function init_ui()
         label="P.DISP",
         id="pitch_dispersion",
         format=function(id)
-          return params:string(id)
+          return RoarFormatters.percentage(params:get(id))
         end
       },
       {
         label="T.DISP",
         id="time_dispersion",
         format=function(id)
-          return params:string(id)
+          return RoarFormatters.percentage(params:get(id))
         end
       }
     },
@@ -202,30 +232,30 @@ function init_ui()
         label="LFO.HZ",
         id="lfo_rate",
         format=function(id)
-          return params:string(id)
+          return RoarFormatters.adaptive_freq(params:get(id))
         end
       },
       {
         label="L.SHP",
         id="lfo_rate",
         format=function(id)
-          return params:string(id)
+          return "N/A"
         end
       }
     },
     {
       {
-        label=">P.RAT",
-        id="lfo_to_pitch_ratio",
+        label=">F.SHFT",
+        id="lfo_to_freq_shift",
         format=function(id)
           return RoarFormatters.percentage(params:get(id))
         end
       },
       {
-        label=">F.SHFT",
-        id="lfo_to_freq_shift",
+        label=">P.RAT",
+        id="lfo_to_pitch_ratio",
         format=function(id)
-          return params:string(id)
+          return RoarFormatters.percentage(params:get(id))
         end
       }
     }
@@ -235,6 +265,11 @@ end
 function load_params()
   params:read()
   params:bang()
+end
+
+function start_polls()
+  freq_shift_poll:start()
+  pitch_ratio_poll:start()
 end
 
 function cleanup()

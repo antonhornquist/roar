@@ -15,12 +15,14 @@ include('lib/common/settings')
 
 function init()
   init_r()
+  init_polls()
   init_params()
   init_ui()
 
   load_settings()
   load_params()
 
+  start_polls()
   start_ui()
 end
 
@@ -28,6 +30,8 @@ function init_r()
   create_modules()
   set_static_module_params()
   connect_modules()
+  engine.pollvisual(0, "Delay1.DelayTime") -- TODO: should be indexed from 1
+  engine.pollvisual(1, "Delay2.DelayTime") -- TODO: should be indexed from 1
 end
 
 function create_modules()
@@ -70,6 +74,28 @@ function connect_modules()
   engine.connect("Filter2/Lowpass", "SoundOut/Right")
 end
 
+function init_polls()
+  delay_time_left_poll = poll.set("poll1", function(value)
+    local delay_time_left_page_param = page_params[2][1]
+    local visual_values = delay_time_left_page_param.visual_values
+    local visual_value = delay_time_left_spec:unmap(value)
+    push_to_capped_list(visual_values, visual_value)
+    UI.set_dirty()
+  end)
+
+  delay_time_left_poll.time = 1/FPS
+
+  delay_time_right_poll = poll.set("poll2", function(value)
+    local delay_time_right_page_param = page_params[2][2]
+    local visual_values = delay_time_right_page_param.visual_values
+    local visual_value = delay_time_right_spec:unmap(value)
+    push_to_capped_list(visual_values, visual_value)
+    UI.set_dirty()
+  end)
+
+  delay_time_right_poll.time = 1/FPS
+end
+
 function init_params()
   params:add {
     type="control",
@@ -78,6 +104,7 @@ function init_params()
     controlspec=R.specs.SGain.Gain,
     action=function (value)
       engine.set("Direct.Gain", value)
+      page_params[1][1].ind_ref = params:get_raw("direct")
       UI.set_dirty()
     end
   }
@@ -92,11 +119,12 @@ function init_params()
     controlspec=delay_send_spec,
     action=function (value)
       engine.set("FXSend.Gain", value)
+      page_params[1][2].ind_ref = params:get_raw("delay_send")
       UI.set_dirty()
     end
   }
 
-  local delay_time_left_spec = R.specs.Delay.DelayTime
+  delay_time_left_spec = R.specs.Delay.DelayTime
   delay_time_left_spec.default = 400
 
   params:add {
@@ -106,11 +134,12 @@ function init_params()
     controlspec=delay_time_left_spec,
     action=function (value)
       engine.set("Delay1.DelayTime", value)
+      page_params[2][1].ind_ref = params:get_raw("delay_time_left")
       UI.set_dirty()
     end
   }
 
-  local delay_time_right_spec = R.specs.Delay.DelayTime
+  delay_time_right_spec = R.specs.Delay.DelayTime
   delay_time_right_spec.default = 300
 
   params:add {
@@ -119,6 +148,7 @@ function init_params()
     name="Delay Time Right",
     controlspec=delay_time_right_spec,
     action=function (value)
+      page_params[2][2].ind_ref = params:get_raw("delay_time_right")
       engine.set("Delay2.DelayTime", value)
       UI.set_dirty()
     end
@@ -136,6 +166,7 @@ function init_params()
     action=function(value)
       engine.set("Filter1.Frequency", value)
       engine.set("Filter2.Frequency", value)
+      page_params[3][1].ind_ref = params:get_raw("damping")
       UI.set_dirty()
     end
   }
@@ -151,6 +182,7 @@ function init_params()
     controlspec=feedback_spec,
     action=function (value)
       engine.set("Feedback.Gain", value)
+      page_params[3][2].ind_ref = params:get_raw("feedback")
       UI.set_dirty()
     end
   }
@@ -163,6 +195,7 @@ function init_params()
     formatter=Formatters.round(0.001),
     action=function (value)
       engine.set("LFO.Frequency", value)
+      page_params[4][1].ind_ref = params:get_raw("mod_rate")
       UI.set_dirty()
     end
   }
@@ -176,6 +209,7 @@ function init_params()
     action=function(value)
       engine.set("Delay1.DelayTimeModulation", value)
       engine.set("Delay2.DelayTimeModulation", value)
+      page_params[4][2].ind_ref = params:get_raw("delay_time_mod_depth")
       UI.set_dirty()
     end
   }
@@ -188,12 +222,6 @@ function init_ui()
       arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
-      --[[
-      my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(get_param_id_for_current_page(1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(get_param_id_for_current_page(2))*64), 15)
-      ]]
-
       local page_param_tuple = page_params[get_page()]
 
       draw_arc(
@@ -218,14 +246,14 @@ function init_ui()
         label="DIR",
         id="direct",
         format=function(id)
-          return Formatters.round(0.01)(params:get(id))
+          return RoarFormatters.adaptive_db(params:get(id))
         end
       },
       {
         label="SEND",
         id="delay_send",
         format=function(id)
-          return params:get(id)
+          return RoarFormatters.adaptive_db(params:get(id))
         end
       }
     },
@@ -235,14 +263,16 @@ function init_ui()
         id="delay_time_left",
         format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
-        end
+        end,
+        visual_values = new_capped_list(util.round(FPS/20)) -- TODO = 2
       },
       {
         label="R.TIME",
         id="delay_time_right",
         format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
-        end
+        end,
+        visual_values = new_capped_list(util.round(FPS/20)) -- TODO = 2
       }
     },
     {
@@ -257,7 +287,7 @@ function init_ui()
         label="FBK",
         id="feedback",
         format=function(id)
-          return params:get(id)
+          return RoarFormatters.adaptive_db(params:get(id))
         end
       }
     },
@@ -283,6 +313,11 @@ end
 function load_params()
   params:read()
   params:bang()
+end
+
+function start_polls()
+  delay_time_left_poll:start()
+  delay_time_right_poll:start()
 end
 
 function cleanup()
