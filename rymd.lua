@@ -218,7 +218,7 @@ function init_ui()
         label="DIR",
         id="direct",
         format=function(id)
-          return params:get(id)
+          return Formatters.round(0.01)(params:get(id))
         end
       },
       {
