@@ -16,7 +16,7 @@ ControlSpec = require('controlspec')
 Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
-include('lib/common')
+Common = include('lib/common')
 include('lib/common/settings')
 
 function init()

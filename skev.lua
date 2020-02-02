@@ -9,7 +9,7 @@ R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
-include('lib/common')
+Common = include('lib/common')
 include('lib/common/settings')
 
 function init()

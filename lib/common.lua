@@ -136,7 +136,7 @@ function Common.redraw()
     local ind_y = y + 14
 
     -- TODO, see below local ind_width = ui_param.ind_width
-    local label_width = _norns.screen_extents(ui_param.label) -- TODO, cache this in ind_width or similar instead
+    local label_width = _norns.screen_extents(ui_param.label) - 2 -- TODO, cache this in ind_width or similar instead
 
     draw_visual_values(ind_x, ind_y, label_width, ui_param)
 
@@ -375,9 +375,11 @@ function set_page(page)
   current_page = page
 end
 
-function Common.get_page()
+function get_page()
   return util.round(current_page)
 end
+
+Common.get_page = get_page
 
 function get_param_id_for_current_page(n)
   local page = get_page()

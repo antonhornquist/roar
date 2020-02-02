@@ -11,7 +11,7 @@ Formatters = require('formatters')
 Voice = require('voice')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
-include('lib/common')
+Common = include('lib/common')
 include('lib/common/settings')
 
 POLYPHONY = 5
@@ -96,6 +96,39 @@ function create_macros()
 end
 
 function init_params()
+  local filter_frequency_spec = R.specs.LPFilter.Frequency:copy()
+  filter_frequency_spec.maxval = 8000
+  filter_frequency_spec.minval = 10
+  filter_frequency_spec.default = 500
+
+  params:add {
+    type="control",
+    id="filter_frequency",
+    name="Filter Frequency",
+    controlspec=filter_frequency_spec,
+    action=function (value)
+      engine.macroset("filter_frequency", value)
+      page_params[1][1].ind_ref = params:get_raw("filter_frequency")
+      UI.set_dirty()
+    end
+  }
+
+  local filter_resonance_spec = R.specs.LPFilter.Resonance:copy()
+  filter_resonance_spec.default = 0.2
+
+  params:add {
+    type="control",
+    id="filter_resonance",
+    name="Filter Resonance",
+    controlspec=filter_resonance_spec,
+    formatter=Formatters.percentage,
+    action=function (value)
+      engine.macroset("filter_resonance", value)
+      page_params[1][2].ind_ref = params:get_raw("filter_resonance")
+      UI.set_dirty()
+    end
+  }
+
   params:add {
     type="control",
     id="osc_a_range",
@@ -104,6 +137,20 @@ function init_params()
     formatter=Formatters.round(1),
     action=function (value)
       engine.macroset("osc_a_range", value)
+      page_params[2][1].ind_ref = params:get_raw("osc_a_range")
+      UI.set_dirty()
+    end
+  }
+
+  params:add {
+    type="control",
+    id="osc_b_range",
+    name="Osc B Range",
+    controlspec=R.specs.PulseOsc.Range,
+    formatter=Formatters.round(1),
+    action=function (value)
+      engine.macroset("osc_b_range", value)
+      page_params[2][2].ind_ref = params:get_raw("osc_b_range")
       UI.set_dirty()
     end
   }
@@ -119,18 +166,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.macroset("osc_a_pulsewidth", value)
-      UI.set_dirty()
-    end
-  }
-
-  params:add {
-    type="control",
-    id="osc_b_range",
-    name="Osc B Range",
-    controlspec=R.specs.PulseOsc.Range,
-    formatter=Formatters.round(1),
-    action=function (value)
-      engine.macroset("osc_b_range", value)
+      page_params[3][1].ind_ref = params:get_raw("osc_a_pulsewidth")
       UI.set_dirty()
     end
   }
@@ -146,6 +182,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.macroset("osc_b_pulsewidth", value)
+      page_params[3][2].ind_ref = params:get_raw("osc_b_pulsewidth")
       UI.set_dirty()
     end
   }
@@ -162,6 +199,7 @@ function init_params()
     action=function (value)
       engine.macroset("osc_a_detune", -value*20)
       engine.macroset("osc_b_detune", value*20)
+      page_params[4][1].ind_ref = params:get_raw("osc_detune")
       UI.set_dirty()
     end
   }
@@ -177,6 +215,7 @@ function init_params()
     formatter=Formatters.round(0.001),
     action=function (value)
       engine.macroset("lfo_frequency", value)
+      page_params[4][2].ind_ref = params:get_raw("lfo_frequency")
       UI.set_dirty()
     end
   }
@@ -193,37 +232,7 @@ function init_params()
     action=function (value)
       engine.macroset("osc_a_pwm", value*0.76)
       engine.macroset("osc_b_pwm", value*0.56)
-      UI.set_dirty()
-    end
-  }
-
-  local filter_frequency_spec = R.specs.LPFilter.Frequency:copy()
-  filter_frequency_spec.maxval = 8000
-  filter_frequency_spec.minval = 10
-  filter_frequency_spec.default = 500
-
-  params:add {
-    type="control",
-    id="filter_frequency",
-    name="Filter Frequency",
-    controlspec=filter_frequency_spec,
-    action=function (value)
-      engine.macroset("filter_frequency", value)
-      UI.set_dirty()
-    end
-  }
-
-  local filter_resonance_spec = R.specs.LPFilter.Resonance:copy()
-  filter_resonance_spec.default = 0.2
-
-  params:add {
-    type="control",
-    id="filter_resonance",
-    name="Filter Resonance",
-    controlspec=filter_resonance_spec,
-    formatter=Formatters.percentage,
-    action=function (value)
-      engine.macroset("filter_resonance", value)
+      page_params[5][1].ind_ref = params:get_raw("lfo_to_osc_pwm")
       UI.set_dirty()
     end
   }
@@ -239,6 +248,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.macroset("env_to_filter_fm", value)
+      page_params[5][2].ind_ref = params:get_raw("env_to_filter_fm")
       UI.set_dirty()
     end
   }
@@ -253,6 +263,7 @@ function init_params()
     controlspec=env_attack_spec,
     action=function (value)
       engine.macroset("env_attack", value)
+      page_params[6][1].ind_ref = params:get_raw("env_attack")
       UI.set_dirty()
     end
   }
@@ -267,6 +278,7 @@ function init_params()
     controlspec=env_decay_spec,
     action=function (value)
       engine.macroset("env_decay", value)
+      page_params[6][2].ind_ref = params:get_raw("env_decay")
       UI.set_dirty()
     end
   }
@@ -282,6 +294,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.macroset("env_sustain", value)
+      page_params[7][1].ind_ref = params:get_raw("env_sustain")
       UI.set_dirty()
     end
   }
@@ -296,6 +309,7 @@ function init_params()
     controlspec=env_release_spec,
     action=function (value)
       engine.macroset("env_release", value)
+      page_params[7][2].ind_ref = params:get_raw("env_release")
       UI.set_dirty()
     end
   }
