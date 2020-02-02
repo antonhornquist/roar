@@ -30,7 +30,7 @@ function init()
 
   cutoff_poll:start()
 
-  start_ui()
+  Common.start_ui()
 end
 
 function init_r()
@@ -74,7 +74,7 @@ function init_polls()
     local cutoff_page_param = page_params[1][1]
     local visual_values = cutoff_page_param.visual_values
     local visual_value = filter_spec:unmap(value)
-    push_to_capped_list(visual_values, visual_value)
+    Common.push_to_capped_list(visual_values, visual_value)
     UI.set_dirty()
   end)
 
@@ -213,12 +213,12 @@ function init_ui()
   UI.init_arc {
     device = arc.connect(),
     on_delta = function(n, delta)
-      arc_delta(n, delta)
+      Common.arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
-      local page_param_tuple = page_params[get_page()]
+      local page_param_tuple = page_params[Common.get_page()]
 
-      draw_arc(
+      Common.draw_arc(
         my_arc,
         params:get_raw(get_param_id_for_current_page(1)),
         page_param_tuple[1].visual_values,
@@ -242,7 +242,7 @@ function init_ui()
         format=function(id)
           return RoarFormatters.adaptive_freq(params:get(id))
         end,
-        visual_values = new_capped_list(util.round(FPS/20)) -- TODO = 2
+        visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
       },
       {
         label="RES",
@@ -311,4 +311,16 @@ end
 function cleanup()
   save_settings()
   params:write()
+end
+
+function redraw()
+  Common.redraw()
+end
+
+function enc(n, delta)
+  Common.enc(n, delta)
+end
+
+function key(n, z)
+  Common.key(n, z)
 end

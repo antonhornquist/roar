@@ -9,9 +9,11 @@ fine = false
 prev_held = false
 next_held = false
 
+local Common = {}
+
 local update_ui
 
-function start_ui()
+function Common.start_ui()
   local update_ui_metro = metro.init()
   update_ui_metro.event = update_ui
   update_ui_metro.time = 1/FPS
@@ -31,7 +33,7 @@ function update_ui()
   UI.refresh()
 end
 
-function redraw()
+function Common.redraw()
   local enc1_x = 0
   local enc1_y = 12
 
@@ -232,7 +234,7 @@ function redraw()
   screen.update()
 end
 
-function enc(n, delta)
+function Common.enc(n, delta)
   local d
   if fine then
     d = delta/5
@@ -247,7 +249,7 @@ function enc(n, delta)
   end
 end
 
-function key(n, z)
+function Common.key(n, z)
   local page
 
   if target_page then
@@ -289,7 +291,7 @@ function key(n, z)
   fine = prev_held and next_held
 end
 
-function arc_delta(n, delta)
+function Common.arc_delta(n, delta)
   local d
   if fine then
     d = delta/5
@@ -301,7 +303,7 @@ function arc_delta(n, delta)
   params:set_raw(id, val+d/500)
 end
 
-function draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
+function Common.draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
   local range = 44
 
   local function translate(n)
@@ -369,12 +371,11 @@ function draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
   draw_arc_ring_leds(2, value2, visual_values2)
 end
 
-
 function set_page(page)
   current_page = page
 end
 
-function get_page()
+function Common.get_page()
   return util.round(current_page)
 end
 
@@ -393,17 +394,18 @@ function transition_to_page(page)
   page_trans_div = (target_page - current_page) / page_trans_frames
 end
 
-function new_capped_list(capacity)
+function Common.new_capped_list(capacity)
   return {
     capacity=capacity,
     content={}
   }
 end
 
-function push_to_capped_list(list, value)
+function Common.push_to_capped_list(list, value)
   if #list.content > list.capacity then
     table.remove(list.content, 1)
   end
   table.insert(list.content, value)
 end
 
+return Common

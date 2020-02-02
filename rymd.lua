@@ -10,7 +10,7 @@ ControlSpec = require('controlspec')
 Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
-include('lib/common')
+Common = include('lib/common')
 include('lib/common/settings')
 
 function init()
@@ -23,7 +23,7 @@ function init()
   load_params()
 
   start_polls()
-  start_ui()
+  Common.start_ui()
 end
 
 function init_r()
@@ -79,7 +79,7 @@ function init_polls()
     local delay_time_left_page_param = page_params[2][1]
     local visual_values = delay_time_left_page_param.visual_values
     local visual_value = delay_time_left_spec:unmap(value)
-    push_to_capped_list(visual_values, visual_value)
+    Common.push_to_capped_list(visual_values, visual_value)
     UI.set_dirty()
   end)
 
@@ -89,7 +89,7 @@ function init_polls()
     local delay_time_right_page_param = page_params[2][2]
     local visual_values = delay_time_right_page_param.visual_values
     local visual_value = delay_time_right_spec:unmap(value)
-    push_to_capped_list(visual_values, visual_value)
+    Common.push_to_capped_list(visual_values, visual_value)
     UI.set_dirty()
   end)
 
@@ -219,12 +219,12 @@ function init_ui()
   UI.init_arc {
     device = arc.connect(),
     on_delta = function(n, delta)
-      arc_delta(n, delta)
+      Common.arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
-      local page_param_tuple = page_params[get_page()]
+      local page_param_tuple = page_params[Common.get_page()]
 
-      draw_arc(
+      Common.draw_arc(
         my_arc,
         params:get_raw(get_param_id_for_current_page(1)),
         page_param_tuple[1].visual_values,
@@ -264,7 +264,7 @@ function init_ui()
         format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
         end,
-        visual_values = new_capped_list(util.round(FPS/20)) -- TODO = 2
+        visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
       },
       {
         label="R.TIME",
@@ -272,7 +272,7 @@ function init_ui()
         format=function(id)
           return RoarFormatters.adaptive_time(params:get(id))
         end,
-        visual_values = new_capped_list(util.round(FPS/20)) -- TODO = 2
+        visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
       }
     },
     {
@@ -323,4 +323,16 @@ end
 function cleanup()
   save_settings()
   params:write()
+end
+
+function redraw()
+  Common.redraw()
+end
+
+function enc(n, delta)
+  Common.enc(n, delta)
+end
+
+function key(n, z)
+  Common.key(n, z)
 end

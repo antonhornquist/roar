@@ -305,18 +305,12 @@ function init_ui()
   UI.init_arc {
     device = arc.connect(),
     on_delta = function(n, delta)
-      arc_delta(n, delta)
+      Common.arc_delta(n, delta)
     end,
     on_refresh = function(my_arc)
-      --[[
-      my_arc:all(0)
-      my_arc:led(1, util.round(params:get_raw(get_param_id_for_current_page(1))*64), 15)
-      my_arc:led(2, util.round(params:get_raw(get_param_id_for_current_page(2))*64), 15)
-      ]]
+      local page_param_tuple = page_params[Common.get_page()]
 
-      local page_param_tuple = page_params[get_page()]
-
-      draw_arc(
+      Common.draw_arc(
         my_arc,
         params:get_raw(get_param_id_for_current_page(1)),
         page_param_tuple[1].visual_values,
@@ -514,7 +508,7 @@ end
 
 function start_ui_after_1_second_delay()
   init_engine_init_delay_metro()
-  start_ui()
+  Common.start_ui()
 end
 
 function init_engine_init_delay_metro() -- TODO: dim screen until done
@@ -570,4 +564,16 @@ end
 function cleanup()
   save_settings()
   params:write()
+end
+
+function redraw()
+  Common.redraw()
+end
+
+function enc(n, delta)
+  Common.enc(n, delta)
+end
+
+function key(n, z)
+  Common.key(n, z)
 end
