@@ -10,7 +10,6 @@ Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
-include('lib/common/settings')
 
 function init()
   init_r()
@@ -18,7 +17,7 @@ function init()
   init_params()
   init_ui()
 
-  load_settings()
+  Common.load_settings(SETTINGS_FILE)
   load_params()
 
   start_polls()
@@ -273,7 +272,7 @@ function start_polls()
 end
 
 function cleanup()
-  save_settings()
+  Common.save_settings(SETTINGS_FILE)
   params:write()
 end
 

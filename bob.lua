@@ -1,9 +1,5 @@
--- FIXME: arc range bug
--- FIXME: ui params labels and adaptive formatters (for other scripts)
--- FIXME: visual indicators for delaytime (rymd)
--- FIXME: visual indicators for pshift, fshift (skev)
+-- FIXME: arc range bug - range arc not 1pixel correct
 -- FIXME: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
--- FIXME: range arc not 1pixel correct
 -- scriptname: bob
 -- v1.2.0 @jah
 
@@ -17,7 +13,6 @@ Formatters = require('formatters')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
-include('lib/common/settings')
 
 function init()
   init_r()
@@ -25,7 +20,7 @@ function init()
   init_params()
   init_ui()
 
-  load_settings()
+  Common.load_settings(SETTINGS_FILE)
   load_params()
 
   cutoff_poll:start()
@@ -309,7 +304,7 @@ function load_params()
 end
 
 function cleanup()
-  save_settings()
+  Common.save_settings(SETTINGS_FILE)
   params:write()
 end
 

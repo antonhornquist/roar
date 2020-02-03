@@ -12,7 +12,6 @@ Voice = require('voice')
 UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
-include('lib/common/settings')
 
 POLYPHONY = 5
 note_downs = {}
@@ -27,7 +26,7 @@ function init()
   init_params()
   init_ui()
 
-  load_settings()
+  Common.load_settings(SETTINGS_FILE)
   load_params()
 
   start_ui_after_1_second_delay()
@@ -576,7 +575,7 @@ function note_off(note)
 end
 
 function cleanup()
-  save_settings()
+  Common.save_settings(SETTINGS_FILE)
   params:write()
 end
 
