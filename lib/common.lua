@@ -1,6 +1,8 @@
 -- shared logic for paged user interface
 -- this file pollutes the global namespace
 
+local UI = include('ui')
+
 HI_LEVEL = 15
 LO_LEVEL = 4
 FPS = 35
@@ -13,6 +15,20 @@ local Common = {}
 
 local update_ui
 
+local pages
+
+function Common.init_ui(conf)
+  if conf.arc then
+    UI.init_arc(conf.arc)
+  end
+
+  if conf.screen then
+    UI.init_screen(conf.screen)
+  end
+
+  pages = conf.pages or {}
+end
+
 function Common.start_ui()
   local update_ui_metro = metro.init()
   update_ui_metro.event = update_ui
@@ -22,15 +38,19 @@ end
 
 function update_ui()
   if target_page then
-    current_page = current_page + page_trans_div
-    page_trans_frames = page_trans_frames - 1
-    if page_trans_frames == 0 then
-      current_page = target_page
-      target_page = nil
-    end
-    UI.set_dirty()
+    update_page_transition()
   end
   UI.refresh()
+end
+
+function update_page_transition()
+  current_page = current_page + page_trans_div
+  page_trans_frames = page_trans_frames - 1
+  if page_trans_frames == 0 then
+    current_page = target_page
+    target_page = nil
+  end
+  UI.set_dirty()
 end
 
 function Common.redraw()
@@ -51,7 +71,7 @@ function Common.redraw()
   local key3_x = key2_x+65
   local key3_y = key2_y
 
-  local function redraw_enc1_widget()
+  local function draw_enc1_widget()
     screen.move(enc1_x, enc1_y)
 
     screen.level(LO_LEVEL)
@@ -61,13 +81,13 @@ function Common.redraw()
     screen.text(util.round(mix:get_raw("output")*100, 1))
   end
 
-  local function redraw_event_flash_widget()
+  local function draw_event_flash_widget()
     screen.level(LO_LEVEL)
     screen.rect(122, enc1_y-7, 5, 5)
     screen.fill()
   end
 
-  local function bullet(x, y, level)
+  local function draw_bullet(x, y, level)
     screen.level(level)
     screen.rect(x, y, 2, 2)
     screen.fill()
@@ -79,7 +99,7 @@ function Common.redraw()
 
   local function draw_value(ind_x, ind_y, ind_x_delta, level)
     local x = ind_x + ind_x_delta
-    bullet(x, ind_y, level)
+    draw_bullet(x, ind_y, level)
   end
 
   local function strokedraw_value(ind_x, ind_y, min_value, max_value, level, width)
@@ -124,7 +144,7 @@ function Common.redraw()
   end
 
   local function draw_ui_param(page, param_index, x, y)
-    local ui_param = page_params[page][param_index]
+    local ui_param = pages[page][param_index]
     screen.move(x, y)
     screen.level(LO_LEVEL)
     screen.text(ui_param.label)
@@ -147,7 +167,7 @@ function Common.redraw()
     end
   end
 
-  local function redraw_enc2_widget()
+  local function draw_enc2_widget()
     local left = math.floor(current_page)
     local right = math.ceil(current_page)
     local offset = current_page - left
@@ -161,7 +181,7 @@ function Common.redraw()
 
   end
 
-  local function redraw_enc3_widget()
+  local function draw_enc3_widget()
     local left = math.floor(current_page)
     local right = math.ceil(current_page)
     local offset = current_page - left
@@ -174,8 +194,8 @@ function Common.redraw()
     end
   end
     
-  local function redraw_page_indicator()
-    local div = 128/num_pages()
+  local function draw_page_indicator()
+    local div = 128/#pages
 
     screen.level(LO_LEVEL)
 
@@ -183,14 +203,14 @@ function Common.redraw()
     screen.fill()
   end
 
-  local function redraw_key2key3_widget()
+  local function draw_key2key3_widget()
     --screen.move(126, key2_y)
     screen.move(key2_x+42, key2_y)
     screen.level(HI_LEVEL)
     screen.text("FN")
   end
 
-  local function redraw_key2_widget()
+  local function draw_key2_widget()
     screen.move(key2_x, key2_y)
     if prev_held and not fine then
       screen.level(HI_LEVEL)
@@ -200,7 +220,7 @@ function Common.redraw()
     screen.text("PREV")
   end
 
-  local function redraw_key3_widget()
+  local function draw_key3_widget()
     screen.move(key3_x, key3_y)
     if next_held and not fine then
       screen.level(HI_LEVEL)
@@ -213,23 +233,23 @@ function Common.redraw()
   screen.font_size(16)
   screen.clear()
 
-  redraw_enc1_widget()
+  draw_enc1_widget()
 
   if UI.show_event_indicator then
-    redraw_event_flash_widget()
+    draw_event_flash_widget()
   end
 
-  redraw_enc2_widget()
-  redraw_enc3_widget()
+  draw_enc2_widget()
+  draw_enc3_widget()
 
-  redraw_page_indicator()
+  draw_page_indicator()
 
   if fine then
-    redraw_key2key3_widget()
+    draw_key2key3_widget()
   end
 
-  redraw_key2_widget()
-  redraw_key3_widget()
+  draw_key2_widget()
+  draw_key3_widget()
 
   screen.update()
 end
@@ -245,7 +265,7 @@ function Common.enc(n, delta)
     mix:delta("output", d)
     UI.screen_dirty = true
   else
-    params:delta(get_param_id_for_current_page(n-1), d)
+    params:delta(Common.get_param_id_for_current_page(n-1), d)
   end
 end
 
@@ -255,14 +275,14 @@ function Common.key(n, z)
   if target_page then
     page = target_page
   else
-    page = get_page()
+    page = get_active_page()
   end
 
   if n == 2 then
     if z == 1 then
       page = page - 1
       if page < 1 then
-        page = num_pages()
+        page = #pages
       end
 
       transition_to_page(page)
@@ -275,7 +295,7 @@ function Common.key(n, z)
   elseif n == 3 then
     if z == 1 then
       page = page + 1
-      if page > num_pages() then
+      if page > #pages then
         page = 1
       end
 
@@ -298,7 +318,7 @@ function Common.arc_delta(n, delta)
   else
     d = delta
   end
-  local id = get_param_id_for_current_page(n)
+  local id = Common.get_param_id_for_current_page(n)
   local val = params:get_raw(id)
   params:set_raw(id, val+d/500)
 end
@@ -375,19 +395,15 @@ function set_page(page)
   current_page = page
 end
 
-function get_page()
+function get_active_page()
   return util.round(current_page)
 end
 
-Common.get_page = get_page
+Common.get_active_page = get_active_page
 
-function get_param_id_for_current_page(n)
-  local page = get_page()
-  return page_params[page][n].id
-end
-
-function num_pages()
-  return #page_params
+function Common.get_param_id_for_current_page(n)
+  local page = get_active_page()
+  return pages[page][n].id
 end
 
 function transition_to_page(page)
@@ -430,8 +446,24 @@ end
 function Common.save_settings()
   local fd=io.open(norns.state.data .. SETTINGS_FILE,"w+")
   io.output(fd)
-  io.write(get_page() .. "\n")
+  io.write(get_active_page() .. "\n")
   io.close(fd)
+end
+
+function Common.render_active_page_on_arc(my_arc)
+  local page = pages[Common.get_active_page()]
+
+  Common.draw_arc(
+    my_arc,
+    params:get_raw(Common.get_param_id_for_current_page(1)),
+    page[1].visual_values,
+    params:get_raw(Common.get_param_id_for_current_page(2)),
+    page[2].visual_values
+  )
+end
+
+function Common.set_ui_dirty()
+  UI.set_dirty()
 end
 
 return Common

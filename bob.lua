@@ -10,7 +10,7 @@ SETTINGS_FILE = "bob.data"
 R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 ControlSpec = require('controlspec')
 Formatters = require('formatters')
-UI = include('lib/ui')
+-- TODO UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
 
@@ -20,11 +20,9 @@ function init()
   init_params()
   init_ui()
 
-  Common.load_settings(SETTINGS_FILE)
-  load_params()
+  load_settings_and_params()
 
   cutoff_poll:start()
-
   Common.start_ui()
 end
 
@@ -66,11 +64,11 @@ end
 
 function init_polls()
   cutoff_poll = poll.set("poll1", function(value)
-    local cutoff_page_param = page_params[1][1]
+    local cutoff_page_param = pages[1][1]
     local visual_values = cutoff_page_param.visual_values
     local visual_value = filter_spec:unmap(value)
     Common.push_to_capped_list(visual_values, visual_value)
-    UI.set_dirty()
+    Common.set_ui_dirty()
   end)
 
   cutoff_poll.time = 1/FPS
@@ -90,8 +88,8 @@ function init_params()
     action=function (value)
       engine.set("FilterL.Frequency", value)
       engine.set("FilterR.Frequency", value)
-      page_params[1][1].ind_ref = params:get_raw("cutoff")
-      UI.set_dirty()
+      pages[1][1].ind_ref = params:get_raw("cutoff")
+      Common.set_ui_dirty()
     end
   }
 
@@ -107,8 +105,8 @@ function init_params()
     action=function (value)
       engine.set("FilterL.Resonance", value)
       engine.set("FilterR.Resonance", value)
-      page_params[1][2].ind_ref = params:get("resonance")
-      UI.set_dirty()
+      pages[1][2].ind_ref = params:get("resonance")
+      Common.set_ui_dirty()
     end
   }
 
@@ -123,8 +121,8 @@ function init_params()
     formatter=Formatters.round(0.001),
     action=function (value)
       engine.set("LFO.Frequency", value)
-      page_params[2][1].ind_ref = params:get_raw("lfo_rate")
-      UI.set_dirty()
+      pages[2][1].ind_ref = params:get_raw("lfo_rate")
+      Common.set_ui_dirty()
     end
   }
 
@@ -139,8 +137,8 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("ModMix.In1", value)
-      page_params[2][2].ind_ref = params:get_raw("lfo_to_cutoff")
-      UI.set_dirty()
+      pages[2][2].ind_ref = params:get_raw("lfo_to_cutoff")
+      Common.set_ui_dirty()
     end
   }
 
@@ -154,8 +152,8 @@ function init_params()
     controlspec=env_attack_spec, -- TODO
     action=function (value)
       engine.set("EnvF.Attack", value)
-      page_params[3][1].ind_ref = params:get_raw("envf_attack")
-      UI.set_dirty()
+      pages[3][1].ind_ref = params:get_raw("envf_attack")
+      Common.set_ui_dirty()
     end
   }
 
@@ -169,8 +167,8 @@ function init_params()
     controlspec=env_decay_spec, -- TODO
     action=function (value)
       engine.set("EnvF.Decay", value)
-      page_params[3][2].ind_ref = params:get_raw("envf_decay")
-      UI.set_dirty()
+      pages[3][2].ind_ref = params:get_raw("envf_decay")
+      Common.set_ui_dirty()
     end
   }
 
@@ -182,8 +180,8 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("EnvF.Sensitivity", value)
-      page_params[4][1].ind_ref = params:get_raw("envf_sensitivity")
-      UI.set_dirty()
+      pages[4][1].ind_ref = params:get_raw("envf_sensitivity")
+      Common.set_ui_dirty()
     end
   }
 
@@ -198,107 +196,100 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("ModMix.In2", value)
-      page_params[4][2].ind_ref = params:get_raw("env_to_cutoff")
-      UI.set_dirty()
+      pages[4][2].ind_ref = params:get_raw("env_to_cutoff")
+      Common.set_ui_dirty()
     end
   }
 end
 
 function init_ui()
-  UI.init_arc {
-    device = arc.connect(),
-    on_delta = function(n, delta)
-      Common.arc_delta(n, delta)
-    end,
-    on_refresh = function(my_arc)
-      local page_param_tuple = page_params[Common.get_page()]
-
-      Common.draw_arc(
-        my_arc,
-        params:get_raw(get_param_id_for_current_page(1)),
-        page_param_tuple[1].visual_values,
-        params:get_raw(get_param_id_for_current_page(2)),
-        page_param_tuple[2].visual_values
-      )
-    end
-  }
-
-  UI.init_screen {
-    on_refresh = function()
-      redraw()
-    end
-  }
-
-  page_params = {
-    {
-      {
-        label="CUTOFF",
-        id="cutoff",
-        format=function(id)
-          return RoarFormatters.adaptive_freq(params:get(id))
-        end,
-        visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
-      },
-      {
-        label="RES",
-        id="resonance",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
-      }
+  Common.init_ui {
+    arc = {
+      device = arc.connect(),
+      on_delta = function(n, delta)
+        Common.handle_arc_delta(n, delta)
+      end,
+      on_refresh = function(my_arc)
+        Common.render_active_page_on_arc(my_arc)
+      end
     },
-    {
-      {
-        label="LFO",
-        id="lfo_rate",
-        format=function(id)
-          return RoarFormatters.adaptive_freq(params:get(id))
-        end
-      },
-      {
-        label="L>FRQ",
-        id="lfo_to_cutoff",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
-      }
+    screen = {
+      on_refresh = function()
+        redraw()
+      end
     },
-    {
+    pages = {
       {
-        label="E.ATK",
-        id="envf_attack",
-        format=function(id)
-          return RoarFormatters.adaptive_time(params:get(id))
-        end
+        {
+          label="CUTOFF",
+          id="cutoff",
+          format=function(id)
+            return RoarFormatters.adaptive_freq(params:get(id))
+          end,
+          visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
+        },
+        {
+          label="RES",
+          id="resonance",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        }
       },
       {
-        label="E.DEC",
-        id="envf_decay",
-        format=function(id)
-          return RoarFormatters.adaptive_time(params:get(id))
-        end
+        {
+          label="LFO",
+          id="lfo_rate",
+          format=function(id)
+            return RoarFormatters.adaptive_freq(params:get(id))
+          end
+        },
+        {
+          label="L>FRQ",
+          id="lfo_to_cutoff",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        }
       },
-    },
-    {
       {
-        label="E.SNS",
-        id="envf_sensitivity",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
+        {
+          label="E.ATK",
+          id="envf_attack",
+          format=function(id)
+            return RoarFormatters.adaptive_time(params:get(id))
+          end
+        },
+        {
+          label="E.DEC",
+          id="envf_decay",
+          format=function(id)
+            return RoarFormatters.adaptive_time(params:get(id))
+          end
+        },
       },
       {
-        label="E>FRQ",
-        id="env_to_cutoff",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
+        {
+          label="E.SNS",
+          id="envf_sensitivity",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        },
+        {
+          label="E>FRQ",
+          id="env_to_cutoff",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        }
       }
     }
   }
 end
 
-function load_params()
+function load_settings_and_params()
+  Common.load_settings(SETTINGS_FILE)
   params:read()
   params:bang()
 end
