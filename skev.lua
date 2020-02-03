@@ -7,9 +7,11 @@ SETTINGS_FILE = "skev.data"
 
 R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 Formatters = require('formatters')
-UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
+
+freq_shift_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
+pitch_ratio_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
 
 function init()
   init_r()
@@ -53,21 +55,18 @@ end
 
 function init_polls()
   freq_shift_poll = poll.set("poll1", function(value)
-    local freq_shift_page_param = page_params[1][1]
-    local visual_values = freq_shift_page_param.visual_values
     local visual_value = R.specs.FShift.Frequency:unmap(value) -- TODO: establish visual specs in lua module
-    Common.push_to_capped_list(visual_values, visual_value)
-    UI.set_dirty()
+    Common.push_to_capped_list(freq_shift_visual_values, visual_value)
+ 
+    Common.set_ui_dirty()
   end)
 
   freq_shift_poll.time = 1/FPS
 
   pitch_ratio_poll = poll.set("poll2", function(value)
-    local pitch_ratio_page_param = page_params[1][2]
-    local visual_values = pitch_ratio_page_param.visual_values
     local visual_value = R.specs.PShift.PitchRatio:unmap(value) -- TODO: establish visual specs in lua module
-    Common.push_to_capped_list(visual_values, visual_value)
-    UI.set_dirty()
+    Common.push_to_capped_list(pitch_ratio_visual_values, visual_value)
+    Common.set_ui_dirty()
   end)
 
   pitch_ratio_poll.time = 1/FPS
@@ -82,8 +81,7 @@ function init_params()
     controlspec=R.specs.FShift.Frequency,
     action=function (value)
       engine.set("FreqShift.Frequency", value)
-      page_params[1][1].ind_ref = params:get_raw("freq_shift")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -95,8 +93,7 @@ function init_params()
     controlspec=R.specs.PShift.PitchRatio,
     action=function (value)
       engine.set("PitchShift.PitchRatio", value)
-      page_params[1][2].ind_ref = params:get_raw("pitch_ratio")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -108,8 +105,7 @@ function init_params()
     controlspec=R.specs.PShift.PitchDispersion,
     action=function (value)
       engine.set("PitchShift.PitchDispersion", value)
-      page_params[2][1].ind_ref = params:get_raw("pitch_dispersion")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -121,8 +117,7 @@ function init_params()
     controlspec=R.specs.PShift.TimeDispersion,
     action=function (value)
       engine.set("PitchShift.TimeDispersion", value)
-      page_params[2][2].ind_ref = params:get_raw("time_dispersion")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -134,8 +129,7 @@ function init_params()
     controlspec=R.specs.MultiLFO.Frequency,
     action=function (value)
       engine.set("LFO.Frequency", value)
-      page_params[3][1].ind_ref = params:get_raw("lfo_rate")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -147,8 +141,7 @@ function init_params()
     controlspec=R.specs.FShift.FM,
     action=function (value)
       engine.set("FreqShift.FM", value)
-      page_params[4][1].ind_ref = params:get_raw("lfo_to_freq_shift")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -160,102 +153,93 @@ function init_params()
     controlspec=R.specs.PShift.PitchRatioModulation,
     action=function (value)
       engine.set("PitchShift.PitchRatioModulation", value)
-      page_params[4][2].ind_ref = params:get_raw("lfo_to_pitch_ratio")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 end
 
 function init_ui()
-  UI.init_arc {
-    device = arc.connect(),
-    on_delta = function(n, delta)
-      Common.arc_delta(n, delta)
-    end,
-    on_refresh = function(my_arc)
-      local page_param_tuple = page_params[Common.get_page()]
-
-      Common.draw_arc(
-        my_arc,
-        params:get_raw(get_param_id_for_current_page(1)),
-        page_param_tuple[1].visual_values,
-        params:get_raw(get_param_id_for_current_page(2)),
-        page_param_tuple[2].visual_values
-      )
-    end
-  }
-
-  UI.init_screen {
-    on_refresh = function()
-      redraw()
-    end
-  }
-
-  page_params = {
-    {
-      {
-        label="F.SHFT",
-        id="freq_shift",
-        format=function(id)
-          return RoarFormatters.adaptive_freq(params:get(id))
-        end,
-        visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
-      },
-      {
-        label="P.RAT",
-        id="pitch_ratio",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end,
-        visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
-      }
+  Common.init_ui {
+    arc = {
+      device = arc.connect(),
+      on_delta = function(n, delta)
+        Common.handle_arc_delta(n, delta)
+      end,
+      on_refresh = function(my_arc)
+        Common.render_active_page_on_arc(my_arc)
+      end
     },
-    {
-      {
-        label="P.DISP",
-        id="pitch_dispersion",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
-      },
-      {
-        label="T.DISP",
-        id="time_dispersion",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
-      }
+    screen = {
+      on_refresh = function()
+        redraw()
+      end
     },
-    {
+    pages = {
       {
-        label="LFO.HZ",
-        id="lfo_rate",
-        format=function(id)
-          return RoarFormatters.adaptive_freq(params:get(id))
-        end
+        {
+          label="F.SHFT",
+          id="freq_shift",
+          format=function(id)
+            return RoarFormatters.adaptive_freq(params:get(id))
+          end,
+          visual_values = freq_shift_visual_values
+        },
+        {
+          label="P.RAT",
+          id="pitch_ratio",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end,
+          visual_values = pitch_ratio_visual_values
+        }
       },
       {
-        label="L.SHP",
-        id="lfo_rate",
-        format=function(id)
-          return "N/A"
-        end
-      }
-    },
-    {
-      {
-        label=">F.SHFT",
-        id="lfo_to_freq_shift",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
+        {
+          label="P.DISP",
+          id="pitch_dispersion",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        },
+        {
+          label="T.DISP",
+          id="time_dispersion",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        }
       },
       {
-        label=">P.RAT",
-        id="lfo_to_pitch_ratio",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
+        {
+          label="LFO.HZ",
+          id="lfo_rate",
+          format=function(id)
+            return RoarFormatters.adaptive_freq(params:get(id))
+          end
+        },
+        {
+          label="L.SHP",
+          id="lfo_rate",
+          format=function(id)
+            return "N/A"
+          end
+        }
+      },
+      {
+        {
+          label=">F.SHFT",
+          id="lfo_to_freq_shift",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        },
+        {
+          label=">P.RAT",
+          id="lfo_to_pitch_ratio",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        }
       }
     }
   }

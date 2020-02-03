@@ -10,9 +10,10 @@ SETTINGS_FILE = "bob.data"
 R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 ControlSpec = require('controlspec')
 Formatters = require('formatters')
--- TODO UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
+
+cutoff_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
 
 function init()
   init_r()
@@ -64,10 +65,8 @@ end
 
 function init_polls()
   cutoff_poll = poll.set("poll1", function(value)
-    local cutoff_page_param = pages[1][1]
-    local visual_values = cutoff_page_param.visual_values
-    local visual_value = filter_spec:unmap(value)
-    Common.push_to_capped_list(visual_values, visual_value)
+    local visual_value = cutoff_spec:unmap(value)
+    Common.push_to_capped_list(cutoff_visual_values, visual_value)
     Common.set_ui_dirty()
   end)
 
@@ -75,20 +74,19 @@ function init_polls()
 end
 
 function init_params()
-  filter_spec = R.specs.LPLadder.Frequency:copy()
-  filter_spec.default = 1000
-  filter_spec.minval = 20
-  filter_spec.maxval = 10000
+  cutoff_spec = R.specs.LPLadder.Frequency:copy()
+  cutoff_spec.default = 1000
+  cutoff_spec.minval = 20
+  cutoff_spec.maxval = 10000
 
   params:add {
     type="control",
     id="cutoff",
     name="Cutoff",
-    controlspec=filter_spec,
+    controlspec=cutoff_spec,
     action=function (value)
       engine.set("FilterL.Frequency", value)
       engine.set("FilterR.Frequency", value)
-      pages[1][1].ind_ref = params:get_raw("cutoff")
       Common.set_ui_dirty()
     end
   }
@@ -105,7 +103,6 @@ function init_params()
     action=function (value)
       engine.set("FilterL.Resonance", value)
       engine.set("FilterR.Resonance", value)
-      pages[1][2].ind_ref = params:get("resonance")
       Common.set_ui_dirty()
     end
   }
@@ -121,7 +118,6 @@ function init_params()
     formatter=Formatters.round(0.001),
     action=function (value)
       engine.set("LFO.Frequency", value)
-      pages[2][1].ind_ref = params:get_raw("lfo_rate")
       Common.set_ui_dirty()
     end
   }
@@ -137,7 +133,6 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("ModMix.In1", value)
-      pages[2][2].ind_ref = params:get_raw("lfo_to_cutoff")
       Common.set_ui_dirty()
     end
   }
@@ -152,7 +147,6 @@ function init_params()
     controlspec=env_attack_spec, -- TODO
     action=function (value)
       engine.set("EnvF.Attack", value)
-      pages[3][1].ind_ref = params:get_raw("envf_attack")
       Common.set_ui_dirty()
     end
   }
@@ -167,7 +161,6 @@ function init_params()
     controlspec=env_decay_spec, -- TODO
     action=function (value)
       engine.set("EnvF.Decay", value)
-      pages[3][2].ind_ref = params:get_raw("envf_decay")
       Common.set_ui_dirty()
     end
   }
@@ -180,7 +173,6 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("EnvF.Sensitivity", value)
-      pages[4][1].ind_ref = params:get_raw("envf_sensitivity")
       Common.set_ui_dirty()
     end
   }
@@ -196,7 +188,6 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("ModMix.In2", value)
-      pages[4][2].ind_ref = params:get_raw("env_to_cutoff")
       Common.set_ui_dirty()
     end
   }
@@ -226,7 +217,7 @@ function init_ui()
           format=function(id)
             return RoarFormatters.adaptive_freq(params:get(id))
           end,
-          visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
+          visual_values = cutoff_visual_values
         },
         {
           label="RES",

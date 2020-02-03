@@ -1,7 +1,7 @@
 -- shared logic for paged user interface
 -- this file pollutes the global namespace
 
-local UI = include('ui')
+local UI = include('lib/ui')
 
 HI_LEVEL = 15
 LO_LEVEL = 4
@@ -20,6 +20,14 @@ local pages
 function Common.init_ui(conf)
   if conf.arc then
     UI.init_arc(conf.arc)
+  end
+
+  if conf.grid then
+    UI.init_grid(conf.grid)
+  end
+
+  if conf.midi then
+    UI.init_midi(conf.midi)
   end
 
   if conf.screen then
@@ -93,7 +101,7 @@ function Common.redraw()
     screen.fill()
   end
 
-  local function translate_visual(value, indicator_width)
+  local function translate(value, indicator_width)
     return util.round(indicator_width * value)
   end
 
@@ -103,44 +111,40 @@ function Common.redraw()
   end
 
   local function strokedraw_value(ind_x, ind_y, min_value, max_value, level, width)
-    local min_ind_x_delta = translate_visual(min_value, width-2)
-    local max_ind_x_delta = translate_visual(max_value, width-2)
+    local min_ind_x_delta = translate(min_value, width)
+    local max_ind_x_delta = translate(max_value, width)
     for ind_x_delta=min_ind_x_delta, max_ind_x_delta do
       draw_value(ind_x, ind_y, ind_x_delta, level)
     end
   end
 
-  local function draw_visual_values(ind_x, ind_y, width, ui_param)
-    local visual_values = ui_param.visual_values
+  local function draw_visual_values(ind_x, ind_y, width, visual_values)
+    local max_level = 2 -- LO_LEVEL
+    local num_visual_values = #visual_values.content
+    if num_visual_values > 1 then
+      local prev_visual_value = visual_values.content[1]
+      for idx=2, num_visual_values do
+        local visual_value = visual_values.content[idx]
 
-    if visual_values then
-      local max_level = 2 -- LO_LEVEL
-      local num_visual_values = #visual_values.content
-      if num_visual_values > 1 then
-        local prev_visual_value = visual_values.content[1]
-        for idx=2, num_visual_values do
-          local visual_value = visual_values.content[idx]
+        local min_visual_value = math.min(prev_visual_value, visual_value)
+        local max_visual_value = math.max(prev_visual_value, visual_value)
 
-          local min_visual_value = math.min(prev_visual_value, visual_value)
-          local max_visual_value = math.max(prev_visual_value, visual_value)
+        local level = util.round(max_level/num_visual_values*idx)
 
-          local level = util.round(max_level/num_visual_values*idx)
+        strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, level, width)
 
-          strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, level, width)
-
-          prev_visual_value = visual_value
-        end
+        prev_visual_value = visual_value
       end
-      --[[
-      if num_visual_values == 2 then
-        local prev_visual_value = translate_visual(visual_values.content[1], width-2)
-        local current_visual_value = translate_visual(visual_values.content[2], width-2)
-        local min_visual_value = math.min(prev_visual_value, current_visual_value)
-        local max_visual_value = math.max(prev_visual_value, current_visual_value)
-        strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, max_level, width)
-      end
-      ]]
     end
+    --[[
+    if num_visual_values == 2 then
+      local prev_visual_value = translate(visual_values.content[1], width-2)
+      local current_visual_value = translate(visual_values.content[2], width-2)
+      local min_visual_value = math.min(prev_visual_value, current_visual_value)
+      local max_visual_value = math.max(prev_visual_value, current_visual_value)
+      strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, max_level, width)
+    end
+    ]]
   end
 
   local function draw_ui_param(page, param_index, x, y)
@@ -158,13 +162,13 @@ function Common.redraw()
     -- TODO, see below local ind_width = ui_param.ind_width
     local label_width = _norns.screen_extents(ui_param.label) - 2 -- TODO, cache this in ind_width or similar instead
 
-    draw_visual_values(ind_x, ind_y, label_width, ui_param)
-
-    local ind_ref = ui_param.ind_ref
-
-    if ind_ref then
-      draw_value(ind_x, ind_y, translate_visual(ind_ref, label_width), HI_LEVEL)
+    local visual_values = ui_param.visual_values
+    if visual_values then
+      draw_visual_values(ind_x, ind_y, label_width, visual_values)
     end
+
+    local value = params:get_raw(ui_param.id)
+    draw_value(ind_x, ind_y, translate(value, label_width), HI_LEVEL)
   end
 
   local function draw_enc2_widget()
@@ -311,7 +315,7 @@ function Common.key(n, z)
   fine = prev_held and next_held
 end
 
-function Common.arc_delta(n, delta)
+function Common.handle_arc_delta(n, delta)
   local d
   if fine then
     d = delta/5
@@ -347,31 +351,29 @@ function Common.draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
   end
 
   local function draw_visual_values(ring, visual_values)
-    if visual_values then
-      local max_level = 2
-      local num_visual_values = #visual_values.content
-      if num_visual_values > 1 then
-        local prev_led_n = translate(visual_values.content[1])
-        for idx=2, num_visual_values do
-          local led_n = translate(visual_values.content[idx])
-          local min_n = math.min(prev_led_n, led_n)
-          local max_n = math.max(prev_led_n, led_n)
+    local max_level = 2
+    local num_visual_values = #visual_values.content
+    if num_visual_values > 1 then
+      local prev_led_n = translate(visual_values.content[1])
+      for idx=2, num_visual_values do
+        local led_n = translate(visual_values.content[idx])
+        local min_n = math.min(prev_led_n, led_n)
+        local max_n = math.max(prev_led_n, led_n)
 
-          local level = util.round(max_level/num_visual_values*idx)
+        local level = util.round(max_level/num_visual_values*idx)
 
-          ring_map_stroke(ring, min_n, max_n, level)
+        ring_map_stroke(ring, min_n, max_n, level)
 
-          prev_led_n = led_n
-        end
+        prev_led_n = led_n
       end
-      --[[
-      TODO
-      if num_visual_values == 2 then
-        print(ring, translate(visual_values.content[1]), translate(visual_values.content[2]), max_level)
-        ring_map_stroke(ring, translate(visual_values.content[1]), translate(visual_values.content[2]), max_level)
-      end
-      ]]
     end
+    --[[
+    TODO
+    if num_visual_values == 2 then
+      print(ring, translate(visual_values.content[1]), translate(visual_values.content[2]), max_level)
+      ring_map_stroke(ring, translate(visual_values.content[1]), translate(visual_values.content[2]), max_level)
+    end
+    ]]
   end
 
   local function draw_arc_ring_leds(ring, value, visual_values)
@@ -379,7 +381,9 @@ function Common.draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
       my_arc:led(ring, n, 1)
     end
 
-    draw_visual_values(ring, visual_values)
+    if visual_values then
+      draw_visual_values(ring, visual_values)
+    end
 
     local led_n = ring_map(translate(value))
 
@@ -451,7 +455,7 @@ function Common.save_settings()
 end
 
 function Common.render_active_page_on_arc(my_arc)
-  local page = pages[Common.get_active_page()]
+  local page = pages[get_active_page()]
 
   Common.draw_arc(
     my_arc,

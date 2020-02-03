@@ -9,7 +9,6 @@ R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 ControlSpec = require('controlspec')
 Formatters = require('formatters')
 Voice = require('voice')
-UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
 
@@ -26,8 +25,7 @@ function init()
   init_params()
   init_ui()
 
-  Common.load_settings(SETTINGS_FILE)
-  load_params()
+  load_settings_and_params()
 
   start_ui_after_1_second_delay()
 end
@@ -107,8 +105,7 @@ function init_params()
     controlspec=filter_frequency_spec,
     action=function (value)
       engine.macroset("filter_frequency", value)
-      page_params[1][1].ind_ref = params:get_raw("filter_frequency")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -123,8 +120,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.macroset("filter_resonance", value)
-      page_params[1][2].ind_ref = params:get_raw("filter_resonance")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -136,8 +132,7 @@ function init_params()
     formatter=Formatters.round(1),
     action=function (value)
       engine.macroset("osc_a_range", value)
-      page_params[2][1].ind_ref = params:get_raw("osc_a_range")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -149,8 +144,7 @@ function init_params()
     formatter=Formatters.round(1),
     action=function (value)
       engine.macroset("osc_b_range", value)
-      page_params[2][2].ind_ref = params:get_raw("osc_b_range")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -165,8 +159,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.macroset("osc_a_pulsewidth", value)
-      page_params[3][1].ind_ref = params:get_raw("osc_a_pulsewidth")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -181,8 +174,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.macroset("osc_b_pulsewidth", value)
-      page_params[3][2].ind_ref = params:get_raw("osc_b_pulsewidth")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -198,8 +190,7 @@ function init_params()
     action=function (value)
       engine.macroset("osc_a_detune", -value*20)
       engine.macroset("osc_b_detune", value*20)
-      page_params[4][1].ind_ref = params:get_raw("osc_detune")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -214,8 +205,7 @@ function init_params()
     formatter=Formatters.round(0.001),
     action=function (value)
       engine.macroset("lfo_frequency", value)
-      page_params[4][2].ind_ref = params:get_raw("lfo_frequency")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -231,8 +221,7 @@ function init_params()
     action=function (value)
       engine.macroset("osc_a_pwm", value*0.76)
       engine.macroset("osc_b_pwm", value*0.56)
-      page_params[5][1].ind_ref = params:get_raw("lfo_to_osc_pwm")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -247,8 +236,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.macroset("env_to_filter_fm", value)
-      page_params[5][2].ind_ref = params:get_raw("env_to_filter_fm")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -262,8 +250,7 @@ function init_params()
     controlspec=env_attack_spec,
     action=function (value)
       engine.macroset("env_attack", value)
-      page_params[6][1].ind_ref = params:get_raw("env_attack")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -277,8 +264,7 @@ function init_params()
     controlspec=env_decay_spec,
     action=function (value)
       engine.macroset("env_decay", value)
-      page_params[6][2].ind_ref = params:get_raw("env_decay")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -293,8 +279,7 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.macroset("env_sustain", value)
-      page_params[7][1].ind_ref = params:get_raw("env_sustain")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -308,215 +293,201 @@ function init_params()
     controlspec=env_release_spec,
     action=function (value)
       engine.macroset("env_release", value)
-      page_params[7][2].ind_ref = params:get_raw("env_release")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 end
 
 function init_ui()
-  UI.init_arc {
-    device = arc.connect(),
-    on_delta = function(n, delta)
-      Common.arc_delta(n, delta)
-    end,
-    on_refresh = function(my_arc)
-      local page_param_tuple = page_params[Common.get_page()]
+  Common.init_ui {
+    arc = {
+      device = arc.connect(),
+      on_delta = function(n, delta)
+        Common.handle_arc_delta(n, delta)
+      end,
+      on_refresh = function(my_arc)
+        Common.render_active_page_on_arc(my_arc)
+      end
+    },
+    --[[
+    --TODO: grid_width
+    grid = {
+      device = grid.connect(),
+      on_key = function(x, y, state)
+        local function gridkey_to_note(x, y, grid_width)
+          if grid_width == 16 then
+            return x * 8 + y
+          else
+            return (4+x) * 8 + y
+          end
+        end
 
-      Common.draw_arc(
-        my_arc,
-        params:get_raw(get_param_id_for_current_page(1)),
-        page_param_tuple[1].visual_values,
-        params:get_raw(get_param_id_for_current_page(2)),
-        page_param_tuple[2].visual_values
-      )
-    end
-  }
+        if engine_ready then
+          local note = gridkey_to_note(x, y, UI.grid_width)
+          if state == 1 then
+            note_on(note, 5)
+          else
+            note_off(note)
+          end
 
-  UI.init_grid {
-    device = grid.connect(),
-    on_key = function(x, y, state)
-      local function gridkey_to_note(x, y, grid_width)
-        if grid_width == 16 then
-          return x * 8 + y
-        else
-          return (4+x) * 8 + y
+          Common.set_ui_dirty()
+        end
+      end,
+      on_refresh = function(my_grid)
+        local function note_to_gridkey(note, grid_width)
+          if grid_width == 16 then
+            return math.floor(note/8), note % 8
+          else
+            return math.floor(note/8) - 4, note % 8
+          end
+        end
+
+        my_grid:all(0)
+        for voicenum=1,POLYPHONY do
+          local note = note_downs[voicenum]
+          if note then
+            local x, y = note_to_gridkey(note, UI.grid_width)
+            my_grid:led(x, y, 15)
+          end
         end
       end
-
-      if engine_ready then
-        local note = gridkey_to_note(x, y, UI.grid_width)
-        if state == 1 then
-          note_on(note, 5)
-        else
-          note_off(note)
-        end
-
-        UI.grid_dirty = true
-        UI.screen_dirty = true
-      end
-    end,
-    on_refresh = function(my_grid)
-      local function note_to_gridkey(note, grid_width)
-        if grid_width == 16 then
-          return math.floor(note/8), note % 8
-        else
-          return math.floor(note/8) - 4, note % 8
+    },
+    ]]
+    midi = {
+      device = midi.connect(),
+      on_event = function (data)
+        if engine_ready then
+          if #data == 0 then return end
+          local msg = midi.to_msg(data)
+          if msg.type == "note_off" then
+            note_off(msg.note)
+          elseif msg.type == "note_on" then
+            note_on(msg.note, msg.vel / 127)
+          end
+          Common.set_ui_dirty()
         end
       end
-
-      my_grid:all(0)
-      for voicenum=1,POLYPHONY do
-        local note = note_downs[voicenum]
-        if note then
-          local x, y = note_to_gridkey(note, UI.grid_width)
-          my_grid:led(x, y, 15)
-        end
+    },
+    screen = {
+      on_refresh = function()
+        redraw()
       end
-    end
-  }
-
-  UI.init_midi {
-    device = midi.connect(),
-    on_event = function (data)
-      if engine_ready then
-        if #data == 0 then return end
-        local msg = midi.to_msg(data)
-        if msg.type == "note_off" then
-          note_off(msg.note)
-        elseif msg.type == "note_on" then
-          note_on(msg.note, msg.vel / 127)
-        end
-        UI.screen_dirty = true
-      end
-    end
-  }
-
-  UI.init_screen {
-    on_refresh = function()
-      redraw()
-    end
-  }
-
-  page_params = {
-    {
-      {
-        label="FREQ",
-        id="filter_frequency",
-        format=function(id)
-          return RoarFormatters.adaptive_freq(params:get(id))
-        end
-      },
-      {
-        label="RES",
-        id="filter_resonance",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
-      }
     },
-    {
+    pages = {
       {
-        label="A.RNG",
-        id="osc_a_range",
-        format=function(id)
-          return RoarFormatters.range(params:get(id))
-        end
+        {
+          label="FREQ",
+          id="filter_frequency",
+          format=function(id)
+            return RoarFormatters.adaptive_freq(params:get(id))
+          end
+        },
+        {
+          label="RES",
+          id="filter_resonance",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        }
       },
       {
-        label="B.RNG",
-        id="osc_b_range",
-        format=function(id)
-          return RoarFormatters.range(params:get(id))
-        end
-      }
-    },
-    {
-      {
-        label="A.PW",
-        id="osc_a_pulsewidth",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
+        {
+          label="A.RNG",
+          id="osc_a_range",
+          format=function(id)
+            return RoarFormatters.range(params:get(id))
+          end
+        },
+        {
+          label="B.RNG",
+          id="osc_b_range",
+          format=function(id)
+            return RoarFormatters.range(params:get(id))
+          end
+        }
       },
       {
-        label="B.PW",
-        id="osc_b_pulsewidth",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
-      }
-    },
-    {
-      {
-        label="DETUN",
-        id="osc_detune",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
+        {
+          label="A.PW",
+          id="osc_a_pulsewidth",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        },
+        {
+          label="B.PW",
+          id="osc_b_pulsewidth",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        }
       },
       {
-        label="LFO",
-        id="lfo_frequency",
-        format=function(id)
-          return RoarFormatters.adaptive_freq(params:get(id))
-        end
-      },
-    },
-    {
-      {
-        label="PWM",
-        id="lfo_to_osc_pwm",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
-      },
-      {
-        label="E>FIL",
-        id="env_to_filter_fm",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
-      },
-    },
-    {
-      {
-        label="E.ATK",
-        id="env_attack",
-        format=function(id)
-          return RoarFormatters.adaptive_time(params:get(id))
-        end
+        {
+          label="DETUN",
+          id="osc_detune",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        },
+        {
+          label="LFO",
+          id="lfo_frequency",
+          format=function(id)
+            return RoarFormatters.adaptive_freq(params:get(id))
+          end
+        },
       },
       {
-        label="E.DEC",
-        id="env_decay",
-        format=function(id)
-          return RoarFormatters.adaptive_time(params:get(id))
-        end
+        {
+          label="PWM",
+          id="lfo_to_osc_pwm",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        },
+        {
+          label="E>FIL",
+          id="env_to_filter_fm",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        },
       },
-    },
-    {
       {
-        label="E.SUS",
-        id="env_sustain",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
+        {
+          label="E.ATK",
+          id="env_attack",
+          format=function(id)
+            return RoarFormatters.adaptive_time(params:get(id))
+          end
+        },
+        {
+          label="E.DEC",
+          id="env_decay",
+          format=function(id)
+            return RoarFormatters.adaptive_time(params:get(id))
+          end
+        },
       },
       {
-        label="E.REL",
-        id="env_release",
-        format=function(id)
-          return RoarFormatters.adaptive_time(params:get(id))
-        end
+        {
+          label="E.SUS",
+          id="env_sustain",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        },
+        {
+          label="E.REL",
+          id="env_release",
+          format=function(id)
+            return RoarFormatters.adaptive_time(params:get(id))
+          end
+        }
       }
     }
   }
-end
-
-function load_params()
-  params:read()
-  params:bang()
 end
 
 function start_ui_after_1_second_delay()
@@ -529,7 +500,7 @@ function init_engine_init_delay_metro() -- TODO: dim screen until done
   engine_init_delay_metro.event = function()
     engine_ready = true
 
-    UI.set_dirty()
+    Common.set_ui_dirty()
 
     engine_init_delay_metro:stop()
   end
@@ -548,7 +519,7 @@ function note_on(note, velocity)
     end
     note_slots[note] = slot
     note_downs[voicenum] = note
-    UI.set_dirty()
+    Common.set_ui_dirty()
   end
 end
 
@@ -570,8 +541,14 @@ function note_off(note)
   if slot then
     voice_allocator:release(slot)
     note_downs[slot.id] = nil
-    UI.set_dirty()
+    Common.set_ui_dirty()
   end
+end
+
+function load_settings_and_params()
+  Common.load_settings(SETTINGS_FILE)
+  params:read()
+  params:bang()
 end
 
 function cleanup()

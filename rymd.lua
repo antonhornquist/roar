@@ -8,9 +8,11 @@ SETTINGS_FILE = "bob.data"
 R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 ControlSpec = require('controlspec')
 Formatters = require('formatters')
-UI = include('lib/ui')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
+
+delay_time_left_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
+delay_time_right_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
 
 function init()
   init_r()
@@ -75,21 +77,17 @@ end
 
 function init_polls()
   delay_time_left_poll = poll.set("poll1", function(value)
-    local delay_time_left_page_param = page_params[2][1]
-    local visual_values = delay_time_left_page_param.visual_values
     local visual_value = delay_time_left_spec:unmap(value)
-    Common.push_to_capped_list(visual_values, visual_value)
-    UI.set_dirty()
+    Common.push_to_capped_list(delay_time_left_visual_values, visual_value)
+    Common.set_ui_dirty()
   end)
 
   delay_time_left_poll.time = 1/FPS
 
   delay_time_right_poll = poll.set("poll2", function(value)
-    local delay_time_right_page_param = page_params[2][2]
-    local visual_values = delay_time_right_page_param.visual_values
     local visual_value = delay_time_right_spec:unmap(value)
-    Common.push_to_capped_list(visual_values, visual_value)
-    UI.set_dirty()
+    Common.push_to_capped_list(delay_time_right_visual_values, visual_value)
+    Common.set_ui_dirty()
   end)
 
   delay_time_right_poll.time = 1/FPS
@@ -103,8 +101,7 @@ function init_params()
     controlspec=R.specs.SGain.Gain,
     action=function (value)
       engine.set("Direct.Gain", value)
-      page_params[1][1].ind_ref = params:get_raw("direct")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -118,8 +115,7 @@ function init_params()
     controlspec=delay_send_spec,
     action=function (value)
       engine.set("FXSend.Gain", value)
-      page_params[1][2].ind_ref = params:get_raw("delay_send")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -133,8 +129,7 @@ function init_params()
     controlspec=delay_time_left_spec,
     action=function (value)
       engine.set("Delay1.DelayTime", value)
-      page_params[2][1].ind_ref = params:get_raw("delay_time_left")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -147,9 +142,8 @@ function init_params()
     name="Delay Time Right",
     controlspec=delay_time_right_spec,
     action=function (value)
-      page_params[2][2].ind_ref = params:get_raw("delay_time_right")
       engine.set("Delay2.DelayTime", value)
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -165,8 +159,7 @@ function init_params()
     action=function(value)
       engine.set("Filter1.Frequency", value)
       engine.set("Filter2.Frequency", value)
-      page_params[3][1].ind_ref = params:get_raw("damping")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -181,8 +174,7 @@ function init_params()
     controlspec=feedback_spec,
     action=function (value)
       engine.set("Feedback.Gain", value)
-      page_params[3][2].ind_ref = params:get_raw("feedback")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -194,8 +186,7 @@ function init_params()
     formatter=Formatters.round(0.001),
     action=function (value)
       engine.set("LFO.Frequency", value)
-      page_params[4][1].ind_ref = params:get_raw("mod_rate")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 
@@ -208,104 +199,95 @@ function init_params()
     action=function(value)
       engine.set("Delay1.DelayTimeModulation", value)
       engine.set("Delay2.DelayTimeModulation", value)
-      page_params[4][2].ind_ref = params:get_raw("delay_time_mod_depth")
-      UI.set_dirty()
+      Common.set_ui_dirty()
     end
   }
 end
 
 function init_ui()
-  UI.init_arc {
-    device = arc.connect(),
-    on_delta = function(n, delta)
-      Common.arc_delta(n, delta)
-    end,
-    on_refresh = function(my_arc)
-      local page_param_tuple = page_params[Common.get_page()]
-
-      Common.draw_arc(
-        my_arc,
-        params:get_raw(get_param_id_for_current_page(1)),
-        page_param_tuple[1].visual_values,
-        params:get_raw(get_param_id_for_current_page(2)),
-        page_param_tuple[2].visual_values
-      )
-    end
-  }
-
-  UI.init_screen {
-    on_refresh = function()
-      redraw()
-    end
-  }
-
-  page_params = {
-    {
+  Common.init_ui {
+    arc = {
+      device = arc.connect(),
+      on_delta = function(n, delta)
+        Common.handle_arc_delta(n, delta)
+      end,
+      on_refresh = function(my_arc)
+        Common.render_active_page_on_arc(my_arc)
+      end
+    },
+    screen = {
+      on_refresh = function()
+        redraw()
+      end
+    },
+    pages = {
       {
-        label="DIR",
-        id="direct",
-        format=function(id)
-          return RoarFormatters.adaptive_db(params:get(id))
-        end
+        {
+          label="DIR",
+          id="direct",
+          format=function(id)
+            return RoarFormatters.adaptive_db(params:get(id))
+          end
+        },
+        {
+          label="SEND",
+          id="delay_send",
+          format=function(id)
+            return RoarFormatters.adaptive_db(params:get(id))
+          end
+        }
       },
       {
-        label="SEND",
-        id="delay_send",
-        format=function(id)
-          return RoarFormatters.adaptive_db(params:get(id))
-        end
-      }
-    },
-    {
-      {
-        label="L.TIME",
-        id="delay_time_left",
-        format=function(id)
-          return RoarFormatters.adaptive_time(params:get(id))
-        end,
-        visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
+        {
+          label="L.TIME",
+          id="delay_time_left",
+          format=function(id)
+            return RoarFormatters.adaptive_time(params:get(id))
+          end,
+          visual_values = delay_time_left_visual_values
+        },
+        {
+          label="R.TIME",
+          id="delay_time_right",
+          format=function(id)
+            return RoarFormatters.adaptive_time(params:get(id))
+          end,
+          visual_values = delay_time_right_visual_values
+        }
       },
       {
-        label="R.TIME",
-        id="delay_time_right",
-        format=function(id)
-          return RoarFormatters.adaptive_time(params:get(id))
-        end,
-        visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
-      }
-    },
-    {
-      {
-        label="DAMP",
-        id="damping",
-        format=function(id)
-          return RoarFormatters.adaptive_freq(params:get(id))
-        end
+        {
+          label="DAMP",
+          id="damping",
+          format=function(id)
+            return RoarFormatters.adaptive_freq(params:get(id))
+          end
+        },
+        {
+          label="FBK",
+          id="feedback",
+          format=function(id)
+            return RoarFormatters.adaptive_db(params:get(id))
+          end
+        }
       },
       {
-        label="FBK",
-        id="feedback",
-        format=function(id)
-          return RoarFormatters.adaptive_db(params:get(id))
-        end
-      }
-    },
-    {
-      {
-        label="RATE",
-        id="mod_rate",
-        format=function(id)
-          return RoarFormatters.adaptive_freq(params:get(id))
-        end
+        {
+          label="RATE",
+          id="mod_rate",
+          format=function(id)
+            return RoarFormatters.adaptive_freq(params:get(id))
+          end
+        },
+        {
+          label="MOD",
+          id="delay_time_mod_depth",
+          format=function(id)
+            return RoarFormatters.percentage(params:get(id))
+          end
+        }
       },
-      {
-        label="MOD",
-        id="delay_time_mod_depth",
-        format=function(id)
-          return RoarFormatters.percentage(params:get(id))
-        end
-      }
-    },
+    }
   }
 end
 
