@@ -435,20 +435,6 @@ function transition_to_page(page)
   page_trans_div = (target_page - current_page) / page_trans_frames
 end
 
-function Common.new_capped_list(capacity)
-  return {
-    capacity=capacity,
-    content={}
-  }
-end
-
-function Common.push_to_capped_list(list, value)
-  if #list.content > list.capacity then
-    table.remove(list.content, 1)
-  end
-  table.insert(list.content, value)
-end
-
 -- shared logic for loading / saving settings
 -- this file pollutes the global namespace
 
