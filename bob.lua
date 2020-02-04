@@ -8,7 +8,7 @@ engine.name = 'R'
 SETTINGS_FILE = "bob.data"
 
 R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
-ControlSpec = require('controlspec')
+ControlSpec = require('controlspec') -- TODO
 Formatters = require('formatters')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
@@ -195,20 +195,7 @@ end
 
 function init_ui()
   Common.init_ui {
-    arc = {
-      device = arc.connect(),
-      on_delta = function(n, delta)
-        Common.handle_arc_delta(n, delta)
-      end,
-      on_refresh = function(my_arc)
-        Common.render_active_page_on_arc(my_arc)
-      end
-    },
-    screen = {
-      on_refresh = function()
-        redraw()
-      end
-    },
+    arc = { device = arc.connect() },
     pages = {
       {
         {

@@ -1,7 +1,7 @@
 -- shared logic for paged user interface
 -- this file pollutes the global namespace
 
-local UI = include('lib/ui')
+local UI = include('lib/ui') -- TODO: path from script root
 
 HI_LEVEL = 15
 LO_LEVEL = 4
@@ -19,8 +19,27 @@ local pages
 
 function Common.init_ui(conf)
   if conf.arc then
-    UI.init_arc(conf.arc)
+    local arc_conf = conf.arc
+
+    if not arc_conf.on_delta then
+      arc_conf.on_delta = Common.default_arc_delta_handler -- TODO: check that this works
+    end
+
+    if not arc_conf.on_refresh then
+      on_refresh = Common.default_arc_refresh_handler -- TODO: check that this works
+    end
+
+    UI.init_arc(arc_conf)
   end
+
+  -- TODO: this section appears to be not so well thought, ought, it's all the same(?)
+  local screen_conf
+  if conf.screen then
+    screen_conf = conf.screen
+  else
+    screen_conf { on_refresh = Common.default_screen_refresh_handler } -- TODO: check that this works
+  end
+  UI.init_screen(screen_conf)
 
   if conf.grid then
     UI.init_grid(conf.grid)
@@ -28,10 +47,6 @@ function Common.init_ui(conf)
 
   if conf.midi then
     UI.init_midi(conf.midi)
-  end
-
-  if conf.screen then
-    UI.init_screen(conf.screen)
   end
 
   pages = conf.pages or {}
@@ -159,7 +174,7 @@ function Common.redraw()
     local ind_x = x + 1
     local ind_y = y + 14
 
-    -- TODO, see below local ind_width = ui_param.ind_width
+    -- TODO: create PR for standard screen_extents function
     local label_width = _norns.screen_extents(ui_param.label) - 2 -- TODO, cache this in ind_width or similar instead
 
     local visual_values = ui_param.visual_values
@@ -167,7 +182,7 @@ function Common.redraw()
       draw_visual_values(ind_x, ind_y, label_width, visual_values)
     end
 
-    local value = params:get_raw(ui_param.id)
+    local value = params:get_raw(ui_param.id) -- TODO: refactor out params, should be an injected dependency
     draw_value(ind_x, ind_y, translate(value, label_width), HI_LEVEL)
   end
 
@@ -255,7 +270,7 @@ function Common.redraw()
   draw_key2_widget()
   draw_key3_widget()
 
-  screen.update()
+  screen.update() -- TODO: screen should probably be considered a device in the screen { device = screen } conf
 end
 
 function Common.enc(n, delta)
@@ -315,7 +330,7 @@ function Common.key(n, z)
   fine = prev_held and next_held
 end
 
-function Common.handle_arc_delta(n, delta)
+function Common.default_arc_delta_handler(n, delta)
   local d
   if fine then
     d = delta/5
@@ -452,6 +467,10 @@ function Common.save_settings()
   io.output(fd)
   io.write(get_active_page() .. "\n")
   io.close(fd)
+end
+
+function Common.default_arc_refresh_handler(my_arc)
+  Common.render_active_page_on_arc(my_arc)
 end
 
 function Common.render_active_page_on_arc(my_arc)
