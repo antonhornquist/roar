@@ -22,22 +22,22 @@ function Common.init_ui(conf)
     local arc_conf = conf.arc
 
     if not arc_conf.on_delta then
-      arc_conf.on_delta = Common.default_arc_delta_handler -- TODO: check that this works
+      arc_conf.on_delta = Common.default_arc_delta_handler
     end
 
     if not arc_conf.on_refresh then
-      on_refresh = Common.default_arc_refresh_handler -- TODO: check that this works
+      arc_conf.on_refresh = Common.default_arc_refresh_handler
     end
 
     UI.init_arc(arc_conf)
   end
 
-  -- TODO: this section appears to be not so well thought, ought, it's all the same(?)
+  -- TODO: pass screen here?
   local screen_conf
   if conf.screen then
     screen_conf = conf.screen
   else
-    screen_conf { on_refresh = Common.default_screen_refresh_handler } -- TODO: check that this works
+    screen_conf = { on_refresh = Common.default_screen_refresh_handler }
   end
   UI.init_screen(screen_conf)
 
@@ -74,6 +74,10 @@ function update_page_transition()
     target_page = nil
   end
   UI.set_dirty()
+end
+
+function Common.default_screen_refresh_handler()
+  redraw()
 end
 
 function Common.redraw()

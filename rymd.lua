@@ -206,7 +206,7 @@ end
 
 function init_ui()
   Common.init_ui {
-    arc = { device = arc.connect() }
+    arc = { device = arc.connect() },
     pages = {
       {
         {
