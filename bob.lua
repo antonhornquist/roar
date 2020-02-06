@@ -12,20 +12,20 @@ RBob = include('lib/r_bob')
 SETTINGS_FILE = "bob.data"
 
 function init()
-  local bob_params, bob_polls = RBob.init()
+  local r_params, r_polls = RBob.init()
 
-  init_polls(bob_polls)
-  init_params(bob_params)
+  init_polls(r_polls)
+  init_params(r_params)
   init_ui()
   load_settings_and_params()
   start_polls()
   start_ui()
 end
 
-function init_polls(bob_polls)
+function init_polls(r_polls)
   script_polls = {}
 
-  for i,bob_poll in ipairs(bob_polls) do
+  for i,bob_poll in ipairs(r_polls) do
     local script_poll
     script_poll = poll.set("poll" .. i, function(value)
       bob_poll.handler(value)
@@ -37,8 +37,8 @@ function init_polls(bob_polls)
   end
 end
 
-function init_params(bob_params)
-  for i,bob_param in ipairs(bob_params) do
+function init_params(r_params)
+  for i,bob_param in ipairs(r_params) do
     params:add {
       type=bob_param.type,
       id=bob_param.id,

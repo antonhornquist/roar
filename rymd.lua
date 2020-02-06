@@ -3,25 +3,24 @@
 
 engine.name = 'R'
 
-SETTINGS_FILE = "rymd.data"
-
-RoarFormatters = include('lib/formatters')
+Formatters = include('lib/formatters')
 Common = include('lib/common')
+RRymd = include('lib/r_rymd')
+
+SETTINGS_FILE = "rymd.data"
 
 delay_time_left_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
 delay_time_right_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
 
 function init()
-  init_r()
-  init_polls()
-  init_params()
+  local r_params, r_polls = RRymd.init()
+
+  init_polls(r_polls)
+  init_params(r_params)
   init_ui()
-
-  Common.load_settings(SETTINGS_FILE)
-  load_params()
-
+  load_settings_and_params()
   start_polls()
-  Common.start_ui()
+  start_ui()
 end
 
 function init_polls()
@@ -162,14 +161,14 @@ function init_ui()
           label="DIR",
           id="direct",
           format=function(id)
-            return RoarFormatters.adaptive_db(params:get(id))
+            return Formatters.adaptive_db(params:get(id))
           end
         },
         {
           label="SEND",
           id="delay_send",
           format=function(id)
-            return RoarFormatters.adaptive_db(params:get(id))
+            return Formatters.adaptive_db(params:get(id))
           end
         }
       },
@@ -178,7 +177,7 @@ function init_ui()
           label="L.TIME",
           id="delay_time_left",
           format=function(id)
-            return RoarFormatters.adaptive_time(params:get(id))
+            return Formatters.adaptive_time(params:get(id))
           end,
           visual_values = delay_time_left_visual_values
         },
@@ -186,7 +185,7 @@ function init_ui()
           label="R.TIME",
           id="delay_time_right",
           format=function(id)
-            return RoarFormatters.adaptive_time(params:get(id))
+            return Formatters.adaptive_time(params:get(id))
           end,
           visual_values = delay_time_right_visual_values
         }
@@ -196,14 +195,14 @@ function init_ui()
           label="DAMP",
           id="damping",
           format=function(id)
-            return RoarFormatters.adaptive_freq(params:get(id))
+            return Formatters.adaptive_freq(params:get(id))
           end
         },
         {
           label="FBK",
           id="feedback",
           format=function(id)
-            return RoarFormatters.adaptive_db(params:get(id))
+            return Formatters.adaptive_db(params:get(id))
           end
         }
       },
@@ -212,14 +211,14 @@ function init_ui()
           label="RATE",
           id="mod_rate",
           format=function(id)
-            return RoarFormatters.adaptive_freq(params:get(id))
+            return Formatters.adaptive_freq(params:get(id))
           end
         },
         {
           label="MOD",
           id="delay_time_mod_depth",
           format=function(id)
-            return RoarFormatters.percentage(params:get(id))
+            return Formatters.percentage(params:get(id))
           end
         }
       },
