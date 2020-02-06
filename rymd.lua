@@ -3,188 +3,22 @@
 
 engine.name = 'R'
 
-Formatters = include('lib/formatters')
-Common = include('lib/common')
 RRymd = include('lib/r_rymd')
+
+Formatters = include('lib/formatters') -- TODO: test that this can be a local
+Common = include('lib/common') -- TODO: test that this can be a local
 
 SETTINGS_FILE = "rymd.data"
 
---[[
---TODO
-delay_time_left_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
-delay_time_right_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
-]]
-
 function init()
-  local r_polls, r_params = RRymd.init()
+  local r_polls, r_params = RRymd.init(util.round(FPS/20))
 
-  init_polls(r_polls)
-  init_params(r_params)
+  Common.init_polls(r_polls)
+  Common.init_params(r_params)
   init_ui()
   load_settings_and_params()
   start_polls()
   start_ui()
-end
-
---[[
-function init_polls()
-  delay_time_left_poll = poll.set("poll1", function(value)
-    local visual_value = delay_time_left_spec:unmap(value)
-    Common.push_to_capped_list(delay_time_left_visual_values, visual_value)
-    Common.set_ui_dirty()
-  end)
-
-  delay_time_left_poll.time = 1/FPS
-
-  delay_time_right_poll = poll.set("poll2", function(value)
-    local visual_value = delay_time_right_spec:unmap(value)
-    Common.push_to_capped_list(delay_time_right_visual_values, visual_value)
-    Common.set_ui_dirty()
-  end)
-
-  delay_time_right_poll.time = 1/FPS
-end
-
-function init_params()
-  params:add {
-    type="control",
-    id="direct",
-    name="Direct",
-    controlspec=R.specs.SGain.Gain,
-    action=function (value)
-      engine.set("Direct.Gain", value)
-      Common.set_ui_dirty()
-    end
-  }
-
-  local delay_send_spec = R.specs.SGain.Gain
-  delay_send_spec.default = -10
-
-  params:add {
-    type="control",
-    id="delay_send",
-    name="Delay Send",
-    controlspec=delay_send_spec,
-    action=function (value)
-      engine.set("FXSend.Gain", value)
-      Common.set_ui_dirty()
-    end
-  }
-
-  delay_time_left_spec = R.specs.Delay.DelayTime
-  delay_time_left_spec.default = 400
-
-  params:add {
-    type="control",
-    id="delay_time_left",
-    name="Delay Time Left",
-    controlspec=delay_time_left_spec,
-    action=function (value)
-      engine.set("Delay1.DelayTime", value)
-      Common.set_ui_dirty()
-    end
-  }
-
-  delay_time_right_spec = R.specs.Delay.DelayTime
-  delay_time_right_spec.default = 300
-
-  params:add {
-    type="control",
-    id="delay_time_right",
-    name="Delay Time Right",
-    controlspec=delay_time_right_spec,
-    action=function (value)
-      engine.set("Delay2.DelayTime", value)
-      Common.set_ui_dirty()
-    end
-  }
-
-  local filter_spec = R.specs.MMFilter.Frequency:copy()
-  filter_spec.default = 4000
-  filter_spec.maxval = 10000
-
-  params:add {
-    type="control",
-    id="damping",
-    name="Damping",
-    controlspec=filter_spec,
-    action=function(value)
-      engine.set("Filter1.Frequency", value)
-      engine.set("Filter2.Frequency", value)
-      Common.set_ui_dirty()
-    end
-  }
-
-  local feedback_spec = R.specs.SGain.Gain:copy()
-  feedback_spec.default = -10
-  feedback_spec.maxval = 0
-
-  params:add {
-    type="control",
-    id="feedback",
-    name="Feedback",
-    controlspec=feedback_spec,
-    action=function (value)
-      engine.set("Feedback.Gain", value)
-      Common.set_ui_dirty()
-    end
-  }
-
-  params:add {
-    type="control",
-    id="mod_rate",
-    name="Mod Rate",
-    controlspec=R.specs.MultiLFO.Frequency,
-    formatter=Formatters.round(0.001),
-    action=function (value)
-      engine.set("LFO.Frequency", value)
-      Common.set_ui_dirty()
-    end
-  }
-
-  params:add {
-    type="control",
-    id="delay_time_mod_depth",
-    name="Delay Time Mod Depth",
-    controlspec=ControlSpec.UNIPOLAR,
-    formatter=Formatters.percentage,
-    action=function(value)
-      engine.set("Delay1.DelayTimeModulation", value)
-      engine.set("Delay2.DelayTimeModulation", value)
-      Common.set_ui_dirty()
-    end
-  }
-end
-]]
-
-function init_polls(r_polls)
-  script_polls = {}
-
-  for i, r_poll in ipairs(r_polls) do
-    local script_poll
-    script_poll = poll.set("poll" .. i, function(value)
-      r_poll.handler(value)
-      Common.set_ui_dirty()
-    end)
-
-    script_poll.time = 1/FPS
-    table.insert(script_polls, script_poll)
-  end
-end
-
-function init_params(r_params)
-  for i, r_param in ipairs(r_params) do
-    params:add {
-      type=r_param.type,
-      id=r_param.id,
-      name=r_param.name,
-      controlspec=r_param.controlspec,
-      action=function (value)
-        r_param.action(value)
-        Common.set_ui_dirty()
-      end
-    }
-  end
 end
 
 function init_ui()
@@ -261,7 +95,8 @@ function init_ui()
   }
 end
 
-function load_params()
+function load_settings_and_params()
+  Common.load_settings(SETTINGS_FILE)
   params:read()
   params:bang()
 end

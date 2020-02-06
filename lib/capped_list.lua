@@ -1,3 +1,4 @@
+-- TODO refactor this to a FIFO instead
 local CappedList = {}
 
 function CappedList.create(capacity)

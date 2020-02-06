@@ -5,51 +5,22 @@
 
 engine.name = 'R'
 
-Formatters = include('lib/formatters')
-Common = include('lib/common')
 RBob = include('lib/r_bob')
+
+Formatters = include('lib/formatters') -- TODO: test that this can be a local
+Common = include('lib/common') -- TODO: test that this can be a local
 
 SETTINGS_FILE = "bob.data"
 
 function init()
-  local r_polls, r_params = RBob.init()
+  local r_polls, r_params = RBob.init(util.round(FPS/20))
 
-  init_polls(r_polls)
-  init_params(r_params)
+  Common.init_polls(r_polls)
+  Common.init_params(r_params)
   init_ui()
   load_settings_and_params()
   start_polls()
-  start_ui()
-end
-
-function init_polls(r_polls)
-  script_polls = {}
-
-  for i, r_poll in ipairs(r_polls) do
-    local script_poll
-    script_poll = poll.set("poll" .. i, function(value)
-      r_poll.handler(value)
-      Common.set_ui_dirty()
-    end)
-
-    script_poll.time = 1/FPS
-    table.insert(script_polls, script_poll)
-  end
-end
-
-function init_params(r_params)
-  for i, r_param in ipairs(r_params) do
-    params:add {
-      type=r_param.type,
-      id=r_param.id,
-      name=r_param.name,
-      controlspec=r_param.controlspec,
-      action=function (value)
-        r_param.action(value)
-        Common.set_ui_dirty()
-      end
-    }
-  end
+  Common.start_ui()
 end
 
 function init_ui()
@@ -135,10 +106,6 @@ function start_polls()
   for i,script_poll in ipairs(script_polls) do
     script_poll:start()
   end
-end
-
-function start_ui()
-  Common.start_ui()
 end
 
 function cleanup()

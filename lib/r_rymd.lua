@@ -8,34 +8,17 @@ local CappedList = include('lib/capped_list')
 
 local Module = {}
 
-Module.visual_values = {
-  delay_time_left = CappedList.create(util.round(FPS/20)) -- TODO = 2
-}
-
+local init_r
+local init_visual_values_bufs
 local init_r_params
 local init_r_polls
 
-function Module.init()
+function Module.init(visual_buf_size)
   init_r()
+  init_visual_values_bufs(visual_buf_size)
   local r_polls = init_r_polls()
   local r_params = init_r_params()
   return r_polls, r_params
-end
-
-local cutoff_poll -- TODO: to be integrated to lib/rbob
-local push_cutoff_visual_value
-
-function init_polls()
-  cutoff_poll = poll.set("poll1", function(value)
-    push_cutoff_visual_value(value)
-    Common.set_ui_dirty()
-  end)
-
-  cutoff_poll.time = 1/FPS
-end
-
-function Module.start()
-  cutoff_poll:start()
 end
 
 local create_modules
@@ -64,8 +47,8 @@ function create_modules()
 end
 
 function set_static_module_params()
-  engine.set("Filter1.Resonance", 0.1)
-  engine.set("Filter2.Resonance", 0.1)
+  engine.set("Filter1.Resonance", 0) -- TODO: or is this the default? then no need to set
+  engine.set("Filter2.Resonance", 0) -- TODO: or is this the default? then no need to set
 end
 
 function connect_modules()
@@ -90,135 +73,136 @@ function connect_modules()
   engine.connect("Filter2/Lowpass", "SoundOut/Right")
 end
 
-local cutoff_spec
+function init_visual_values_bufs(visual_buf_size)
+  Module.visual_values = {
+    delay_time_left = CappedList.create(visual_buf_size)
+    delay_time_right = CappedList.create(visual_buf_size)
+  }
+end
 
-function init_params()
-  local params = {}
+local delay_time_left_spec
+local delay_time_right_spec
 
-  cutoff_spec = R.specs.LPLadder.Frequency:copy()
-  cutoff_spec.default = 1000
-  cutoff_spec.minval = 20
-  cutoff_spec.maxval = 10000
+function init_r_polls()
+  return {
+    {
+      id = "delay_time_left",
+      handler = function(value)
+        local visual_value = delay_time_left_spec:unmap(value) -- TODO: this should use an edited version of the Visual spec
+        Common.push_to_capped_list(Module.visual_values.delay_time_left, visual_value)
+      end
+    },
+    {
+      id = "delay_time_right",
+      handler = function(value)
+        local visual_value = delay_time_right_spec:unmap(value) -- TODO: this should use an edited version of the Visual spec
+        Common.push_to_capped_list(Module.visual_values.delay_time_right, visual_value)
+      end
+    }
+  }
+end
 
-  table.insert(params, {
-    type="control",
-    id="cutoff",
-    name="Cutoff",
-    controlspec=cutoff_spec,
+function init_r_params()
+  local r_params = {}
+
+  table.insert(r_params, {
+    id="direct",
+    name="Direct",
+    controlspec=R.specs.SGain.Gain,
     action=function (value)
-      engine.set("FilterL.Frequency", value)
-      engine.set("FilterR.Frequency", value)
-      Common.set_ui_dirty()
+      engine.set("Direct.Gain", value)
     end
   })
 
-  local resonance_spec = R.specs.LPLadder.Resonance:copy()
-  resonance_spec.default = 0.5
+  local delay_send_spec = R.specs.SGain.Gain
+  delay_send_spec.default = -10
 
-  table.insert(params, {
-    type="control",
-    id="resonance",
-    name="Resonance",
-    controlspec=resonance_spec,
-    formatter=Formatters.percentage,
+  table.insert(r_params, {
+    id="delay_send",
+    name="Delay Send",
+    controlspec=delay_send_spec,
     action=function (value)
-      engine.set("FilterL.Resonance", value)
-      engine.set("FilterR.Resonance", value)
-      Common.set_ui_dirty()
+      engine.set("FXSend.Gain", value)
     end
   })
 
-  local lfo_rate_spec = R.specs.MultiLFO.Frequency:copy()
-  lfo_rate_spec.default = 0.5
+  delay_time_left_spec = R.specs.Delay.DelayTime
+  delay_time_left_spec.default = 400
 
-  table.insert(params, {
-    type="control",
-    id="lfo_rate",
-    name="LFO Rate",
-    controlspec=lfo_rate_spec,
+  table.insert(r_params, {
+    id="delay_time_left",
+    name="Delay Time Left",
+    controlspec=delay_time_left_spec,
+    action=function (value)
+      engine.set("Delay1.DelayTime", value)
+    end
+  })
+
+  delay_time_right_spec = R.specs.Delay.DelayTime
+  delay_time_right_spec.default = 300
+
+  table.insert(r_params, {
+    id="delay_time_right",
+    name="Delay Time Right",
+    controlspec=delay_time_right_spec,
+    action=function (value)
+      engine.set("Delay2.DelayTime", value)
+    end
+  })
+
+  local filter_spec = R.specs.MMFilter.Frequency:copy()
+  filter_spec.default = 4000
+  filter_spec.maxval = 10000
+
+  table.insert(r_params, {
+    id="damping",
+    name="Damping",
+    controlspec=filter_spec,
+    action=function(value)
+      engine.set("Filter1.Frequency", value)
+      engine.set("Filter2.Frequency", value)
+    end
+  })
+
+  local feedback_spec = R.specs.SGain.Gain:copy()
+  feedback_spec.default = -10
+  feedback_spec.maxval = 0
+
+  table.insert(r_params, {
+    id="feedback",
+    name="Feedback",
+    controlspec=feedback_spec,
+    action=function (value)
+      engine.set("Feedback.Gain", value)
+    end
+  })
+
+  table.insert(r_params, {
+    id="mod_rate",
+    name="Mod Rate",
+    controlspec=R.specs.MultiLFO.Frequency,
     formatter=Formatters.round(0.001),
     action=function (value)
       engine.set("LFO.Frequency", value)
-      Common.set_ui_dirty()
     end
   })
 
-  local lfo_to_cutoff_spec = R.specs.LinMixer.In1
-  lfo_to_cutoff_spec.default = 0.1
-
-  table.insert(params, {
-    type="control",
-    id="lfo_to_cutoff",
-    name="LFO > Cutoff",
-    controlspec=lfo_to_cutoff_spec,
+  table.insert(r_params, {
+    id="delay_time_mod_depth",
+    name="Delay Time Mod Depth",
+    controlspec=ControlSpec.UNIPOLAR,
     formatter=Formatters.percentage,
-    action=function (value)
-      engine.set("ModMix.In1", value)
-      Common.set_ui_dirty()
+    action=function(value)
+      engine.set("Delay1.DelayTimeModulation", value)
+      engine.set("Delay2.DelayTimeModulation", value)
     end
   })
 
-  local env_attack_spec = R.specs.ADSREnv.Attack:copy()
-  env_attack_spec.default = 50
+  for _,r_param in ipairs(r_params) do
+    r_param.type = "control"
+  end
 
-  table.insert(params, {
-    type="control",
-    id="envf_attack",
-    name="EnvF Attack",
-    controlspec=env_attack_spec, -- TODO
-    action=function (value)
-      engine.set("EnvF.Attack", value)
-      Common.set_ui_dirty()
-    end
-  })
-
-  local env_decay_spec = R.specs.ADSREnv.Decay:copy()
-  env_decay_spec.default = 100
-
-  table.insert(params, {
-    type="control",
-    id="envf_decay",
-    name="EnvF Decay",
-    controlspec=env_decay_spec, -- TODO
-    action=function (value)
-      engine.set("EnvF.Decay", value)
-      Common.set_ui_dirty()
-    end
-  })
-
-  table.insert(params, {
-    type="control",
-    id="envf_sensitivity",
-    name="EnvF Sensitivity",
-    controlspec=ControlSpec.new(0, 1), -- TODO
-    formatter=Formatters.percentage,
-    action=function (value)
-      engine.set("EnvF.Sensitivity", value)
-      Common.set_ui_dirty()
-    end
-  })
-
-  local env_to_cutoff_spec = R.specs.LinMixer.In2
-  env_to_cutoff_spec.default = 0.1
-
-  table.insert(params, {
-    type="control",
-    id="env_to_cutoff",
-    name="Env > Cutoff",
-    controlspec=env_to_cutoff_spec,
-    formatter=Formatters.percentage,
-    action=function (value)
-      engine.set("ModMix.In2", value)
-      Common.set_ui_dirty()
-    end
-  })
-
-  return params
-end
-
-function push_cutoff_visual_value(value)
-  local visual_value = cutoff_spec:unmap(value)
-  CappedList.push(Module.visual_values.cutoff, visual_value)
+  return r_params
 end
 
 return Module

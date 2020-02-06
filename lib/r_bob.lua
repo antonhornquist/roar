@@ -8,17 +8,14 @@ local CappedList = include('lib/capped_list')
 
 local Module = {}
 
-Module.visual_values = {
-  cutoff = CappedList.create(util.round(FPS/20)) -- TODO = 2 take this as input to init() instead of relying on FPS
-}
-
 local init_r
+local init_visual_values_bufs
 local init_r_params
 local init_r_polls
 
-function Module.init()
+function Module.init(visual_buf_size)
   init_r()
-
+  init_visual_values_bufs(visual_buf_size)
   local r_polls = init_r_polls()
   local r_params = init_r_params()
   return r_polls, r_params
@@ -61,6 +58,12 @@ function connect_modules()
   engine.connect("ModMix/Out", "FilterR/FM")
   engine.connect("FilterL/Out", "SoundOut/Left")
   engine.connect("FilterR/Out", "SoundOut/Right")
+end
+
+function init_visual_values_bufs(visual_buf_size)
+  Module.visual_values = {
+    cutoff = CappedList.create(visual_buf_size)
+  }
 end
 
 local cutoff_spec
@@ -182,8 +185,8 @@ function init_r_params()
     end
   })
 
-  for _,bob_param in ipairs(r_params) do
-    bob_param.type = "control"
+  for _,r_param in ipairs(r_params) do
+    r_param.type = "control"
   end
 
   return r_params

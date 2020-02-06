@@ -17,6 +17,36 @@ local update_ui
 
 local pages
 
+function Common.init_polls(r_polls)
+  script_polls = {}
+
+  for i, r_poll in ipairs(r_polls) do
+    local script_poll
+    script_poll = poll.set("poll" .. i, function(value)
+      r_poll.handler(value)
+      Common.set_ui_dirty()
+    end)
+
+    script_poll.time = 1/FPS
+    table.insert(script_polls, script_poll)
+  end
+end
+
+function Common.init_params(r_params)
+  for i, r_param in ipairs(r_params) do
+    params:add {
+      type=r_param.type,
+      id=r_param.id,
+      name=r_param.name,
+      controlspec=r_param.controlspec,
+      action=function (value)
+        r_param.action(value)
+        Common.set_ui_dirty()
+      end
+    }
+  end
+end
+
 function Common.init_ui(conf)
   if conf.arc then
     local arc_conf = conf.arc
