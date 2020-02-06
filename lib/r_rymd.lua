@@ -75,7 +75,7 @@ end
 
 function init_visual_values_bufs(visual_buf_size)
   Module.visual_values = {
-    delay_time_left = CappedList.create(visual_buf_size)
+    delay_time_left = CappedList.create(visual_buf_size),
     delay_time_right = CappedList.create(visual_buf_size)
   }
 end
@@ -89,14 +89,14 @@ function init_r_polls()
       id = "delay_time_left",
       handler = function(value)
         local visual_value = delay_time_left_spec:unmap(value) -- TODO: this should use an edited version of the Visual spec
-        Common.push_to_capped_list(Module.visual_values.delay_time_left, visual_value)
+        CappedList.push(Module.visual_values.delay_time_left, visual_value)
       end
     },
     {
       id = "delay_time_right",
       handler = function(value)
         local visual_value = delay_time_right_spec:unmap(value) -- TODO: this should use an edited version of the Visual spec
-        Common.push_to_capped_list(Module.visual_values.delay_time_right, visual_value)
+        CappedList.push(Module.visual_values.delay_time_right, visual_value)
       end
     }
   }

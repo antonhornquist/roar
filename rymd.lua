@@ -18,7 +18,7 @@ function init()
   init_ui()
   load_settings_and_params()
   start_polls()
-  start_ui()
+  Common.start_ui()
 end
 
 function init_ui()
@@ -48,7 +48,7 @@ function init_ui()
           format=function(id)
             return Formatters.adaptive_time(params:get(id))
           end,
-          visual_values = delay_time_left_visual_values
+          visual_values = RRymd.visual_values.delay_time_left
         },
         {
           label="R.TIME",
@@ -56,7 +56,7 @@ function init_ui()
           format=function(id)
             return Formatters.adaptive_time(params:get(id))
           end,
-          visual_values = delay_time_right_visual_values
+          visual_values = RRymd.visual_values.delay_time_right
         }
       },
       {
@@ -106,11 +106,6 @@ function start_polls()
     script_poll:start()
   end
 end
-
-function start_ui()
-  Common.start_ui()
-end
-
 
 function cleanup()
   Common.save_settings(SETTINGS_FILE)

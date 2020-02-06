@@ -20,7 +20,6 @@ function init()
   Common.init_params(r_params)
   init_ui()
   load_settings_and_params()
-  start_polls()
   start_ui_after_1_second_delay()
 end
 

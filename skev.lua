@@ -10,9 +10,6 @@ Common = include('lib/common') -- TODO: test that this can be a local
 
 SETTINGS_FILE = "rymd.data"
 
-freq_shift_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
-pitch_ratio_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
-
 function init()
   local r_polls, r_params = RSkev.init(util.round(FPS/20))
 
@@ -21,7 +18,7 @@ function init()
   init_ui()
   load_settings_and_params()
   start_polls()
-  start_ui()
+  Common.start_ui()
 end
 
 function init_ui()
@@ -35,7 +32,7 @@ function init_ui()
           format=function(id)
             return Formatters.adaptive_freq(params:get(id))
           end,
-          visual_values = freq_shift_visual_values
+          visual_values = RSkev.visual_values.freq_shift
         },
         {
           label="P.RAT",
@@ -43,7 +40,7 @@ function init_ui()
           format=function(id)
             return Formatters.percentage(params:get(id))
           end,
-          visual_values = pitch_ratio_visual_values
+          visual_values = RSkev.visual_values.pitch_ratio
         }
       },
       {
@@ -98,7 +95,8 @@ function init_ui()
   }
 end
 
-function load_params()
+function load_settings_and_params()
+  Common.load_settings(SETTINGS_FILE)
   params:read()
   params:bang()
 end

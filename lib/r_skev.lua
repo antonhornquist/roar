@@ -53,8 +53,8 @@ end
 
 function init_visual_values_bufs(visual_buf_size)
   Module.visual_values = {
-    delay_time_left = CappedList.create(visual_buf_size)
-    delay_time_right = CappedList.create(visual_buf_size)
+    freq_shift = CappedList.create(visual_buf_size),
+    pitch_ratio = CappedList.create(visual_buf_size)
   }
 end
 
@@ -67,14 +67,14 @@ function init_r_polls()
       id = "freq_shift",
       handler = function(value)
         local visual_value = R.specs.FShift.Frequency:unmap(value) -- TODO: establish visual specs in lua module
-        Common.push_to_capped_list(freq_shift_visual_values, visual_value)
+        CappedList.push(Module.visual_values.freq_shift, visual_value)
       end
     },
     {
       id = "pitch_ratio",
       handler = function(value)
         local visual_value = R.specs.PShift.PitchRatio:unmap(value) -- TODO: establish visual specs in lua module
-        Common.push_to_capped_list(pitch_ratio_visual_values, visual_value)
+        CappedList.push(Module.visual_values.pitch_ratio, visual_value)
       end
     }
   }
