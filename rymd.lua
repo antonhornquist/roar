@@ -3,11 +3,8 @@
 
 engine.name = 'R'
 
-SETTINGS_FILE = "bob.data"
+SETTINGS_FILE = "rymd.data"
 
-R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
-ControlSpec = require('controlspec')
-Formatters = require('formatters')
 RoarFormatters = include('lib/formatters')
 Common = include('lib/common')
 
@@ -25,54 +22,6 @@ function init()
 
   start_polls()
   Common.start_ui()
-end
-
-function init_r()
-  create_modules()
-  set_static_module_params()
-  connect_modules()
-  engine.pollvisual(0, "Delay1.DelayTime") -- TODO: should be indexed from 1
-  engine.pollvisual(1, "Delay2.DelayTime") -- TODO: should be indexed from 1
-end
-
-function create_modules()
-  engine.new("LFO", "MultiLFO")
-  engine.new("SoundIn", "SoundIn")
-  engine.new("Direct", "SGain")
-  engine.new("FXSend", "SGain")
-  engine.new("Delay1", "Delay")
-  engine.new("Delay2", "Delay")
-  engine.new("Filter1", "MMFilter")
-  engine.new("Filter2", "MMFilter")
-  engine.new("Feedback", "SGain")
-  engine.new("SoundOut", "SoundOut")
-end
-
-function set_static_module_params()
-  engine.set("Filter1.Resonance", 0.1)
-  engine.set("Filter2.Resonance", 0.1)
-end
-
-function connect_modules()
-  engine.connect("LFO/Sine", "Delay1/DelayTimeModulation")
-  engine.connect("LFO/Sine", "Delay2/DelayTimeModulation")
-  engine.connect("SoundIn/Left", "Direct/Left")
-  engine.connect("SoundIn/Right", "Direct/Right")
-  engine.connect("Direct/Left", "SoundOut/Left")
-  engine.connect("Direct/Right", "SoundOut/Right")
-
-  engine.connect("SoundIn/Left", "FXSend/Left")
-  engine.connect("SoundIn/Right", "FXSend/Right")
-  engine.connect("FXSend/Left", "Delay1/In")
-  engine.connect("FXSend/Right", "Delay2/In")
-  engine.connect("Delay1/Out", "Filter1/In")
-  engine.connect("Delay2/Out", "Filter2/In")
-  engine.connect("Filter1/Lowpass", "Feedback/Left")
-  engine.connect("Filter2/Lowpass", "Feedback/Right")
-  engine.connect("Feedback/Left", "Delay2/In")
-  engine.connect("Feedback/Right", "Delay1/In")
-  engine.connect("Filter1/Lowpass", "SoundOut/Left")
-  engine.connect("Filter2/Lowpass", "SoundOut/Right")
 end
 
 function init_polls()

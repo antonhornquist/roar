@@ -1,22 +1,42 @@
 -- TODO: uses engine global (could be passed in init())
 -- TODO: assumes R engine is loaded (or should this be done here?)
 
-R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
-ControlSpec = require('controlspec') -- TODO
-Formatters = require('formatters')
-
+local R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
+local ControlSpec = require('controlspec') -- TODO
+local Formatters = require('formatters')
 local CappedList = include('lib/capped_list')
 
-local Rbob = {}
+local Module = {}
 
-Rbob.cutoff_visual_values = CappedList.create(util.round(FPS/20)) -- TODO = 2
+Module.visual_values = {
+  cutoff = CappedList.create(util.round(FPS/20)) -- TODO = 2
+}
 
 local init_r
 local init_params
+local init_polls
 
-function Rbob.init()
+function Module.init()
   init_r()
-  init_params()
+  local params = init_params()
+  init_polls()
+  return params
+end
+
+local cutoff_poll -- TODO: to be integrated to lib/rbob
+local push_cutoff_visual_value
+
+function init_polls()
+  cutoff_poll = poll.set("poll1", function(value)
+    push_cutoff_visual_value(value)
+    Common.set_ui_dirty()
+  end)
+
+  cutoff_poll.time = 1/FPS
+end
+
+function Module.start()
+  cutoff_poll:start()
 end
 
 local create_modules
@@ -27,36 +47,48 @@ function init_r()
   create_modules()
   set_static_module_params()
   connect_modules()
-
-  engine.pollvisual(0, "FilterL.Frequency") -- TODO: should be indexed from 1
+  engine.pollvisual(0, "Delay1.DelayTime") -- TODO: should be indexed from 1
+  engine.pollvisual(1, "Delay2.DelayTime") -- TODO: should be indexed from 1
 end
 
 function create_modules()
   engine.new("LFO", "MultiLFO")
   engine.new("SoundIn", "SoundIn")
-  engine.new("EnvF", "EnvF")
-  engine.new("ModMix", "LinMixer")
-  engine.new("FilterL", "LPLadder")
-  engine.new("FilterR", "LPLadder")
+  engine.new("Direct", "SGain")
+  engine.new("FXSend", "SGain")
+  engine.new("Delay1", "Delay")
+  engine.new("Delay2", "Delay")
+  engine.new("Filter1", "MMFilter")
+  engine.new("Filter2", "MMFilter")
+  engine.new("Feedback", "SGain")
   engine.new("SoundOut", "SoundOut")
 end
 
 function set_static_module_params()
-  engine.set("FilterL.FM", 1)
-  engine.set("FilterR.FM", 1)
-  engine.set("ModMix.Out", 1)
+  engine.set("Filter1.Resonance", 0.1)
+  engine.set("Filter2.Resonance", 0.1)
 end
 
 function connect_modules()
-  engine.connect("SoundIn/Left", "FilterL/In")
-  engine.connect("SoundIn/Right", "FilterR/In")
-  engine.connect("LFO/Sine", "ModMix/In1")
-  engine.connect("SoundIn/Left", "EnvF/In")
-  engine.connect("EnvF/Env", "ModMix/In2")
-  engine.connect("ModMix/Out", "FilterL/FM")
-  engine.connect("ModMix/Out", "FilterR/FM")
-  engine.connect("FilterL/Out", "SoundOut/Left")
-  engine.connect("FilterR/Out", "SoundOut/Right")
+  engine.connect("LFO/Sine", "Delay1/DelayTimeModulation")
+  engine.connect("LFO/Sine", "Delay2/DelayTimeModulation")
+  engine.connect("SoundIn/Left", "Direct/Left")
+  engine.connect("SoundIn/Right", "Direct/Right")
+  engine.connect("Direct/Left", "SoundOut/Left")
+  engine.connect("Direct/Right", "SoundOut/Right")
+
+  engine.connect("SoundIn/Left", "FXSend/Left")
+  engine.connect("SoundIn/Right", "FXSend/Right")
+  engine.connect("FXSend/Left", "Delay1/In")
+  engine.connect("FXSend/Right", "Delay2/In")
+  engine.connect("Delay1/Out", "Filter1/In")
+  engine.connect("Delay2/Out", "Filter2/In")
+  engine.connect("Filter1/Lowpass", "Feedback/Left")
+  engine.connect("Filter2/Lowpass", "Feedback/Right")
+  engine.connect("Feedback/Left", "Delay2/In")
+  engine.connect("Feedback/Right", "Delay1/In")
+  engine.connect("Filter1/Lowpass", "SoundOut/Left")
+  engine.connect("Filter2/Lowpass", "SoundOut/Right")
 end
 
 local cutoff_spec
@@ -182,12 +214,12 @@ function init_params()
     end
   })
 
-  Rbob.params = params
+  return params
 end
 
-function Rbob.push_cutoff_visual_value(value)
+function push_cutoff_visual_value(value)
   local visual_value = cutoff_spec:unmap(value)
-  CappedList.push(Rbob.cutoff_visual_values, visual_value)
+  CappedList.push(Module.visual_values.cutoff, visual_value)
 end
 
-return Rbob
+return Module
