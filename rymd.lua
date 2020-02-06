@@ -9,11 +9,14 @@ RRymd = include('lib/r_rymd')
 
 SETTINGS_FILE = "rymd.data"
 
+--[[
+--TODO
 delay_time_left_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
 delay_time_right_visual_values = Common.new_capped_list(util.round(FPS/20)) -- TODO = 2
+]]
 
 function init()
-  local r_params, r_polls = RRymd.init()
+  local r_polls, r_params = RRymd.init()
 
   init_polls(r_polls)
   init_params(r_params)
@@ -23,6 +26,7 @@ function init()
   start_ui()
 end
 
+--[[
 function init_polls()
   delay_time_left_poll = poll.set("poll1", function(value)
     local visual_value = delay_time_left_spec:unmap(value)
@@ -151,6 +155,37 @@ function init_params()
     end
   }
 end
+]]
+
+function init_polls(r_polls)
+  script_polls = {}
+
+  for i, r_poll in ipairs(r_polls) do
+    local script_poll
+    script_poll = poll.set("poll" .. i, function(value)
+      r_poll.handler(value)
+      Common.set_ui_dirty()
+    end)
+
+    script_poll.time = 1/FPS
+    table.insert(script_polls, script_poll)
+  end
+end
+
+function init_params(r_params)
+  for i, r_param in ipairs(r_params) do
+    params:add {
+      type=r_param.type,
+      id=r_param.id,
+      name=r_param.name,
+      controlspec=r_param.controlspec,
+      action=function (value)
+        r_param.action(value)
+        Common.set_ui_dirty()
+      end
+    }
+  end
+end
 
 function init_ui()
   Common.init_ui {
@@ -232,9 +267,15 @@ function load_params()
 end
 
 function start_polls()
-  delay_time_left_poll:start()
-  delay_time_right_poll:start()
+  for i,script_poll in ipairs(script_polls) do
+    script_poll:start()
+  end
 end
+
+function start_ui()
+  Common.start_ui()
+end
+
 
 function cleanup()
   Common.save_settings(SETTINGS_FILE)

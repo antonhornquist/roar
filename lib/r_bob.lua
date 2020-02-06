@@ -9,39 +9,30 @@ local CappedList = include('lib/capped_list')
 local Module = {}
 
 Module.visual_values = {
-  cutoff = CappedList.create(util.round(FPS/20)) -- TODO = 2
+  cutoff = CappedList.create(util.round(FPS/20)) -- TODO = 2 take this as input to init() instead of relying on FPS
 }
 
-local create_modules
-local set_static_module_params
-local connect_modules
+local init_r
 local init_r_params
 local init_r_polls
 
 function Module.init()
-  create_modules()
-  set_static_module_params()
-  connect_modules()
-
-  engine.pollvisual(0, "FilterL.Frequency") -- TODO: should be indexed from 1
+  init_r()
 
   local r_polls = init_r_polls()
   local r_params = init_r_params()
   return r_polls, r_params
 end
 
-local cutoff_spec
+local create_modules
+local set_static_module_params
+local connect_modules
 
-function init_r_polls()
-  return {
-    {
-      id = "cutoff",
-      handler = function(value)
-        local visual_value = cutoff_spec:unmap(value)
-        CappedList.push(Module.visual_values.cutoff, visual_value)
-      end
-    }
-  }
+function init_r()
+  create_modules()
+  set_static_module_params()
+  connect_modules()
+  engine.pollvisual(0, "FilterL.Frequency") -- TODO: should be indexed from 1
 end
 
 function create_modules()
@@ -70,6 +61,20 @@ function connect_modules()
   engine.connect("ModMix/Out", "FilterR/FM")
   engine.connect("FilterL/Out", "SoundOut/Left")
   engine.connect("FilterR/Out", "SoundOut/Right")
+end
+
+local cutoff_spec
+
+function init_r_polls()
+  return {
+    {
+      id = "cutoff",
+      handler = function(value)
+        local visual_value = cutoff_spec:unmap(value) -- TODO: this should use an edited version of the Visual spec
+        CappedList.push(Module.visual_values.cutoff, visual_value)
+      end
+    }
+  }
 end
 
 function init_r_params()

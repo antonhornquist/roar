@@ -9,18 +9,17 @@ local CappedList = include('lib/capped_list')
 local Module = {}
 
 Module.visual_values = {
-  cutoff = CappedList.create(util.round(FPS/20)) -- TODO = 2
+  delay_time_left = CappedList.create(util.round(FPS/20)) -- TODO = 2
 }
 
-local init_r
-local init_params
-local init_polls
+local init_r_params
+local init_r_polls
 
 function Module.init()
   init_r()
-  local params = init_params()
-  init_polls()
-  return params
+  local r_polls = init_r_polls()
+  local r_params = init_r_params()
+  return r_polls, r_params
 end
 
 local cutoff_poll -- TODO: to be integrated to lib/rbob

@@ -25,9 +25,7 @@ end
 function init_polls(r_polls)
   script_polls = {}
 
-  print("--------------")
   for i, r_poll in ipairs(r_polls) do
-    print(r_polls.id)
     local script_poll
     script_poll = poll.set("poll" .. i, function(value)
       r_poll.handler(value)
@@ -37,13 +35,10 @@ function init_polls(r_polls)
     script_poll.time = 1/FPS
     table.insert(script_polls, script_poll)
   end
-  print("<<<<<<<")
 end
 
 function init_params(r_params)
-  print("--------------")
   for i, r_param in ipairs(r_params) do
-    print(r_params.id)
     params:add {
       type=r_param.type,
       id=r_param.id,
@@ -55,7 +50,6 @@ function init_params(r_params)
       end
     }
   end
-  print("<<<<<<<")
 end
 
 function init_ui()
