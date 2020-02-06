@@ -24,7 +24,6 @@ function Module.init()
 end
 
 local cutoff_spec
-local cutoff_poll -- TODO: to be integrated to lib/rbob
 
 function init_polls()
   return {
@@ -93,7 +92,6 @@ function init_params()
     action=function (value)
       engine.set("FilterL.Frequency", value)
       engine.set("FilterR.Frequency", value)
-      -- TODO Common.set_ui_dirty()
     end
   })
 
@@ -108,7 +106,6 @@ function init_params()
     action=function (value)
       engine.set("FilterL.Resonance", value)
       engine.set("FilterR.Resonance", value)
-      -- TODO Common.set_ui_dirty()
     end
   })
 
@@ -122,7 +119,6 @@ function init_params()
     formatter=Formatters.round(0.001),
     action=function (value)
       engine.set("LFO.Frequency", value)
-      -- TODO Common.set_ui_dirty()
     end
   })
 
@@ -136,7 +132,6 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("ModMix.In1", value)
-      -- TODO Common.set_ui_dirty()
     end
   })
 
@@ -149,7 +144,6 @@ function init_params()
     controlspec=env_attack_spec, -- TODO
     action=function (value)
       engine.set("EnvF.Attack", value)
-      -- TODO Common.set_ui_dirty()
     end
   })
 
@@ -162,7 +156,6 @@ function init_params()
     controlspec=env_decay_spec, -- TODO
     action=function (value)
       engine.set("EnvF.Decay", value)
-      -- TODO Common.set_ui_dirty()
     end
   })
 
@@ -173,7 +166,6 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("EnvF.Sensitivity", value)
-      -- TODO Common.set_ui_dirty()
     end
   })
 
@@ -187,7 +179,6 @@ function init_params()
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("ModMix.In2", value)
-      -- TODO Common.set_ui_dirty()
     end
   })
 

@@ -38,10 +38,7 @@ function init_polls(bob_polls)
 end
 
 function init_params(bob_params)
-  print("----")
   for i,bob_param in ipairs(bob_params) do
-    print(bob_param.id)
-    -- TODO params:add(bob_param)
     params:add {
       type=bob_param.type,
       id=bob_param.id,
@@ -53,7 +50,6 @@ function init_params(bob_params)
       end
     }
   end
-  print("----")
 end
 
 function init_ui()
