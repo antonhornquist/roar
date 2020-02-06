@@ -12,7 +12,7 @@ RBob = include('lib/r_bob')
 SETTINGS_FILE = "bob.data"
 
 function init()
-  local r_params, r_polls = RBob.init()
+  local r_polls, r_params = RBob.init()
 
   init_polls(r_polls)
   init_params(r_params)
@@ -25,31 +25,37 @@ end
 function init_polls(r_polls)
   script_polls = {}
 
-  for i,bob_poll in ipairs(r_polls) do
+  print("--------------")
+  for i, r_poll in ipairs(r_polls) do
+    print(r_polls.id)
     local script_poll
     script_poll = poll.set("poll" .. i, function(value)
-      bob_poll.handler(value)
+      r_poll.handler(value)
       Common.set_ui_dirty()
     end)
 
     script_poll.time = 1/FPS
     table.insert(script_polls, script_poll)
   end
+  print("<<<<<<<")
 end
 
 function init_params(r_params)
-  for i,bob_param in ipairs(r_params) do
+  print("--------------")
+  for i, r_param in ipairs(r_params) do
+    print(r_params.id)
     params:add {
-      type=bob_param.type,
-      id=bob_param.id,
-      name=bob_param.name,
-      controlspec=bob_param.controlspec,
+      type=r_param.type,
+      id=r_param.id,
+      name=r_param.name,
+      controlspec=r_param.controlspec,
       action=function (value)
-        bob_param.action(value)
+        r_param.action(value)
         Common.set_ui_dirty()
       end
     }
   end
+  print("<<<<<<<")
 end
 
 function init_ui()
