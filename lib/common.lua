@@ -1,6 +1,8 @@
 -- shared logic for paged user interface
 -- this file pollutes the global namespace
 
+-- uses _norns, metro, params, mix, poll globals
+
 local UI = include('lib/ui') -- TODO: path from script root
 
 HI_LEVEL = 15
@@ -12,12 +14,19 @@ prev_held = false
 next_held = false
 
 local Common = {}
-
 local update_ui
-
 local pages
 
-function Common.init_polls(r_polls)
+function Common.init(r_polls, r_params, ui, settings_file)
+  Common.init_script_polls(r_polls)
+  Common.init_params(r_params)
+  Common.init_ui(ui)
+  Common.load_settings_and_params(settings_file)
+  Common.start_script_polls()
+  Common.start_ui()
+end
+
+function Common.init_script_polls(r_polls)
   script_polls = {}
 
   for i, r_poll in ipairs(r_polls) do
@@ -503,6 +512,25 @@ function Common.render_active_page_on_arc(my_arc)
     params:get_raw(Common.get_param_id_for_current_page(2)),
     page[2].visual_values
   )
+end
+
+function Common.cleanup(settings_file)
+  Common.save_settings(settings_file)
+  params:write()
+end
+
+function Common.load_settings_and_params(settings_file)
+  Common.load_settings(settings_file)
+  params:read()
+  params:bang()
+end
+
+function Common.start_script_polls()
+  if script_polls then
+    for i, script_poll in ipairs(script_polls) do
+      script_poll:start()
+    end
+  end
 end
 
 function Common.set_ui_dirty()

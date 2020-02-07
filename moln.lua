@@ -5,12 +5,11 @@
 
 engine.name = 'R'
 
-SETTINGS_FILE = "moln.data"
-
-R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
+RMoln = include('lib/r_moln')
 Formatters = include('lib/formatters')
 Common = include('lib/common')
-RMoln = include('lib/r_moln')
+
+SETTINGS_FILE = "moln.data"
 
 engine_ready = false -- TODO
 

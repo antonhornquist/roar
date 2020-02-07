@@ -1,4 +1,6 @@
 -- utility library for paging UI
+--
+-- TODO: difference to regular formatters is that these functions takes values, not params
 
 local Formatters = {}
 

@@ -5,26 +5,16 @@
 
 engine.name = 'R'
 
-RBob = include('lib/r_bob')
-
-Formatters = include('lib/formatters') -- TODO: test that this can be a local
-Common = include('lib/common') -- TODO: test that this can be a local
+local RBob = include('lib/r_bob')
+local Formatters = include('lib/formatters')
+local Common = include('lib/common')
 
 SETTINGS_FILE = "bob.data"
 
 function init()
-  local r_polls, r_params = RBob.init(util.round(FPS/20))
+  r_polls, visual_values, r_params = RBob.init(util.round(FPS/20))
 
-  Common.init_polls(r_polls)
-  Common.init_params(r_params)
-  init_ui()
-  load_settings_and_params()
-  start_polls()
-  Common.start_ui()
-end
-
-function init_ui()
-  Common.init_ui {
+  ui = {
     arc = { device = arc.connect() },
     pages = {
       {
@@ -34,7 +24,7 @@ function init_ui()
           format=function(id)
             return Formatters.adaptive_freq(params:get(id))
           end,
-          visual_values = RBob.visual_values.cutoff
+          visual_values = visual_values.cutoff
         },
         {
           label="RES",
@@ -94,23 +84,12 @@ function init_ui()
       }
     }
   }
-end
 
-function load_settings_and_params()
-  Common.load_settings(SETTINGS_FILE)
-  params:read()
-  params:bang()
-end
-
-function start_polls()
-  for i,script_poll in ipairs(script_polls) do
-    script_poll:start()
-  end
+  Common.init(r_polls, r_params, ui, SETTINGS_FILE)
 end
 
 function cleanup()
-  Common.save_settings(SETTINGS_FILE)
-  params:write()
+  Common.cleanup(SETTINGS_FILE)
 end
 
 function redraw()

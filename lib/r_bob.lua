@@ -13,12 +13,14 @@ local init_visual_values_bufs
 local init_r_params
 local init_r_polls
 
+local visual_values
+
 function Module.init(visual_buf_size)
   init_r()
-  init_visual_values_bufs(visual_buf_size)
+  visual_values = init_visual_values_bufs(visual_buf_size)
   local r_polls = init_r_polls()
   local r_params = init_r_params()
-  return r_polls, r_params
+  return r_polls, visual_values, r_params
 end
 
 local create_modules
@@ -61,7 +63,7 @@ function connect_modules()
 end
 
 function init_visual_values_bufs(visual_buf_size)
-  Module.visual_values = {
+  return {
     cutoff = CappedList.create(visual_buf_size)
   }
 end
