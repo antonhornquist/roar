@@ -8,7 +8,7 @@ local CappedList = include('lib/capped_list')
 
 local Module = {}
 
-local init_r
+local init_r_modules
 local init_visual_values_bufs
 local init_r_params
 local init_r_polls
@@ -16,7 +16,7 @@ local init_r_polls
 local visual_values
 
 function Module.init(visual_buf_size)
-  init_r()
+  init_r_modules()
   visual_values = init_visual_values_bufs(visual_buf_size)
   local r_polls = init_r_polls()
   local r_params = init_r_params()
@@ -27,7 +27,7 @@ local create_modules
 local set_static_module_params
 local connect_modules
 
-function init_r()
+function init_r_modules()
   create_modules()
   set_static_module_params()
   connect_modules()
@@ -76,7 +76,7 @@ function init_r_polls()
       id = "cutoff",
       handler = function(value)
         local visual_value = cutoff_spec:unmap(value) -- TODO: this should use an edited version of the Visual spec
-        CappedList.push(Module.visual_values.cutoff, visual_value)
+        CappedList.push(visual_values.cutoff, visual_value)
       end
     }
   }

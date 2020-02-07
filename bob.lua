@@ -1,13 +1,13 @@
 -- FIXME: arc range bug - range arc not 1pixel correct
 -- FIXME: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
 -- scriptname: bob
--- v1.2.0 @jah
+-- v1.3.0 @jah
 
 engine.name = 'R'
 
-local RBob = include('lib/r_bob')
-local Formatters = include('lib/formatters')
-local Common = include('lib/common')
+RBob = include('lib/r_bob')
+Formatters = include('lib/formatters')
+Common = include('lib/common')
 
 SETTINGS_FILE = "bob.data"
 

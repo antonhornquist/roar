@@ -1,7 +1,5 @@
 -- scriptname: moln
--- v1.2.0 @jah
-
--- TODO: refactor out lib/moln.lua
+-- v1.3.0 @jah
 
 engine.name = 'R'
 
@@ -14,19 +12,9 @@ SETTINGS_FILE = "moln.data"
 engine_ready = false -- TODO
 
 function init()
-  local r_polls, r_params = RMoln.init(util.round(FPS/20))
+  r_polls, visual_values, r_params = RMoln.init(util.round(FPS/20))
 
-  Common.init_params(r_params)
-  init_ui()
-  load_settings_and_params()
-  start_ui_after_1_second_delay()
-end
-
-function init_params()
-end
-
-function init_ui()
-  Common.init_ui {
+  ui = {
     arc = { device = arc.connect() },
     --[[
     --TODO: grid_width
@@ -44,9 +32,9 @@ function init_ui()
         if engine_ready then
           local note = gridkey_to_note(x, y, UI.grid_width)
           if state == 1 then
-            Common.note_on(note, 5)
+            RMoln.note_on(note, 5)
           else
-            Common.note_off(note)
+            RMoln.note_off(note)
           end
 
           Common.set_ui_dirty()
@@ -79,9 +67,9 @@ function init_ui()
           if #data == 0 then return end
           local msg = midi.to_msg(data)
           if msg.type == "note_off" then
-            Common.note_off(msg.note)
+            RMoln.note_off(msg.note)
           elseif msg.type == "note_on" then
-            Common.note_on(msg.note, msg.vel / 127)
+            RMoln.note_on(msg.note, msg.vel / 127)
           end
           Common.set_ui_dirty()
         end
@@ -202,11 +190,13 @@ function init_ui()
       }
     }
   }
+
+  start_after_1_second_delay()
 end
 
-function start_ui_after_1_second_delay()
+function start_after_1_second_delay()
   init_engine_init_delay_metro()
-  Common.start_ui()
+  Common.init(r_polls, r_params, ui, SETTINGS_FILE)
 end
 
 function init_engine_init_delay_metro() -- TODO: dim screen until done
@@ -222,15 +212,8 @@ function init_engine_init_delay_metro() -- TODO: dim screen until done
   engine_init_delay_metro:start()
 end
 
-function load_settings_and_params()
-  Common.load_settings(SETTINGS_FILE)
-  params:read()
-  params:bang()
-end
-
 function cleanup()
-  Common.save_settings(SETTINGS_FILE)
-  params:write()
+  Common.cleanup(SETTINGS_FILE)
 end
 
 function redraw()

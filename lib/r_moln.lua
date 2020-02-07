@@ -9,21 +9,20 @@ local Voice = require('voice')
 
 local Module = {}
 
-local init_r
-local init_visual_values_bufs
+local init_r_modules
 local init_r_params
 
 local POLYPHONY = 5
 local note_downs = {}
 local note_slots = {}
+local voice_allocator
 
 function Module.init(visual_buf_size)
-  local voice_allocator = Voice.new(POLYPHONY)
+  voice_allocator = Voice.new(POLYPHONY)
 
-  init_r()
-  init_visual_values_bufs(visual_buf_size)
+  init_r_modules()
   local r_params = init_r_params()
-  return {}, r_params
+  return {}, {}, r_params
 end
 
 local create_modules
@@ -31,7 +30,7 @@ local set_static_module_params
 local connect_modules
 local create_macros
 
-function init_r()
+function init_r_modules()
   create_modules()
   set_static_module_params()
   connect_modules()
@@ -92,14 +91,6 @@ function create_macros()
   engine.newmacro("env_sustain", R.util.poly_expand("Env.Sustain", POLYPHONY))
   engine.newmacro("env_release", R.util.poly_expand("Env.Release", POLYPHONY))
 end
-
-function init_visual_values_bufs(visual_buf_size)
-  Module.visual_values = {
-    cutoff = CappedList.create(visual_buf_size)
-  }
-end
-
-local cutoff_spec
 
 function init_r_params()
   local r_params = {}
@@ -252,7 +243,6 @@ function init_r_params()
     controlspec=env_decay_spec,
     action=function (value)
       engine.macroset("env_decay", value)
-      Common.set_ui_dirty()
     end
   })
 
@@ -291,7 +281,7 @@ end
 local trig_voice
 local release_voice
 
-function Common.note_on(note, velocity)
+function Module.note_on(note, velocity)
   if not note_slots[note] then
     local slot = voice_allocator:get()
     local voicenum = slot.id
@@ -302,7 +292,6 @@ function Common.note_on(note, velocity)
     end
     note_slots[note] = slot
     note_downs[voicenum] = note
-    Common.set_ui_dirty()
   end
 end
 
@@ -321,12 +310,11 @@ function release_voice(voicenum)
   engine.bulkset("FreqGate"..voicenum..".Gate 0")
 end
 
-function Common.note_off(note)
+function Module.note_off(note)
   local slot = note_slots[note]
   if slot then
     voice_allocator:release(slot)
     note_downs[slot.id] = nil
-    Common.set_ui_dirty()
   end
 end
 

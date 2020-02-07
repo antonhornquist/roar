@@ -8,23 +8,23 @@ local CappedList = include('lib/capped_list')
 
 local Module = {}
 
-local init_r
+local init_r_modules
 local init_visual_values_bufs
 local init_r_params
 local init_r_polls
 
 function Module.init(visual_buf_size)
-  init_r()
-  init_visual_values_bufs(visual_buf_size)
+  init_r_modules()
+  local visual_values = init_visual_values_bufs(visual_buf_size)
   local r_polls = init_r_polls()
   local r_params = init_r_params()
-  return r_polls, r_params
+  return r_polls, visual_values, r_params
 end
 
 local create_modules
 local connect_modules
 
-function init_r()
+function init_r_modules()
   create_modules()
   connect_modules()
   engine.pollvisual(0, "FreqShift.Frequency") -- TODO: should be indexed from 1
@@ -52,7 +52,7 @@ function connect_modules()
 end
 
 function init_visual_values_bufs(visual_buf_size)
-  Module.visual_values = {
+  return {
     freq_shift = CappedList.create(visual_buf_size),
     pitch_ratio = CappedList.create(visual_buf_size)
   }
@@ -67,14 +67,14 @@ function init_r_polls()
       id = "freq_shift",
       handler = function(value)
         local visual_value = R.specs.FShift.Frequency:unmap(value) -- TODO: establish visual specs in lua module
-        CappedList.push(Module.visual_values.freq_shift, visual_value)
+        CappedList.push(visual_values.freq_shift, visual_value)
       end
     },
     {
       id = "pitch_ratio",
       handler = function(value)
         local visual_value = R.specs.PShift.PitchRatio:unmap(value) -- TODO: establish visual specs in lua module
-        CappedList.push(Module.visual_values.pitch_ratio, visual_value)
+        CappedList.push(visual_values.pitch_ratio, visual_value)
       end
     }
   }
