@@ -17,6 +17,9 @@ local note_downs = {}
 local note_slots = {}
 local voice_allocator
 
+Module.POLYPHONY = POLYPHONY
+Module.note_downs = note_downs
+
 function Module.init(visual_buf_size)
   voice_allocator = Voice.new(POLYPHONY)
 

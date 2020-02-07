@@ -98,6 +98,12 @@ function Common.start_ui()
   update_ui_metro:start()
 end
 
+function Common.get_grid_width()
+  return UI.grid_width
+end
+
+local update_page_transition
+
 function update_ui()
   if target_page then
     update_page_transition()
@@ -331,6 +337,9 @@ function Common.enc(n, delta)
   end
 end
 
+local get_active_page
+local transition_to_page
+
 function Common.key(n, z)
   local page
 
@@ -453,7 +462,7 @@ function Common.draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
   draw_arc_ring_leds(2, value2, visual_values2)
 end
 
-function set_page(page)
+local function set_page(page)
   current_page = page
 end
 
@@ -488,7 +497,15 @@ function Common.load_settings()
       page = tonumber(str)
     end
   end
-  set_page(page or 1)
+  if page then
+    if page <= #pages then
+      set_page(page or 1)
+    else
+      set_page(1)
+    end
+  else
+    set_page(1)
+  end
 end
 
 function Common.save_settings()

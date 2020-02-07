@@ -9,15 +9,13 @@ Common = include('lib/common')
 
 SETTINGS_FILE = "moln.data"
 
-engine_ready = false -- TODO
+engine_ready = false
 
 function init()
   r_polls, visual_values, r_params = RMoln.init(util.round(FPS/20))
 
   ui = {
     arc = { device = arc.connect() },
-    --[[
-    --TODO: grid_width
     grid = {
       device = grid.connect(),
       on_key = function(x, y, state)
@@ -30,7 +28,7 @@ function init()
         end
 
         if engine_ready then
-          local note = gridkey_to_note(x, y, UI.grid_width)
+          local note = gridkey_to_note(x, y, Common.get_grid_width())
           if state == 1 then
             RMoln.note_on(note, 5)
           else
@@ -50,16 +48,15 @@ function init()
         end
 
         my_grid:all(0)
-        for voicenum=1,POLYPHONY do
-          local note = note_downs[voicenum]
+        for voicenum=1,RMoln.POLYPHONY do
+          local note = RMoln.note_downs[voicenum]
           if note then
-            local x, y = note_to_gridkey(note, UI.grid_width)
+            local x, y = note_to_gridkey(note, Common.get_grid_width())
             my_grid:led(x, y, 15)
           end
         end
       end
     },
-    ]]
     midi = {
       device = midi.connect(),
       on_event = function (data)
