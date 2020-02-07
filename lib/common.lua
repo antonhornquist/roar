@@ -217,8 +217,8 @@ function Common.redraw()
     local ind_x = x + 1
     local ind_y = y + 14
 
-    -- TODO: create PR for standard screen_extents function
-    local label_width = _norns.screen_extents(ui_param.label) - 2 -- TODO, cache this in ind_width or similar instead
+    -- local label_width = _norns.screen_extents(ui_param.label) - 2 -- TODO, cache this in ind_width or similar instead
+    local label_width = screen.extents(ui_param.label) - 2 -- TODO, cache this in ind_width or similar instead
 
     local visual_values = ui_param.visual_values
     if visual_values then
