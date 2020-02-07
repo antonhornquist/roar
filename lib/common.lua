@@ -1,9 +1,8 @@
 -- shared logic for paged user interface
--- this file pollutes the global namespace
 
 -- uses _norns, metro, params, mix, poll globals
 
-local UI = include('lib/ui') -- TODO: path from script root
+local UI = include('lib/ui') -- TODO: include wtf! path from script root!?
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
@@ -223,7 +222,6 @@ function Common.redraw()
     local ind_x = x + 1
     local ind_y = y + 14
 
-    -- local label_width = _norns.screen_extents(ui_param.label) - 2 -- TODO, cache this in ind_width or similar instead
     local label_width = screen.extents(ui_param.label) - 2 -- TODO, cache this in ind_width or similar instead
 
     local visual_values = ui_param.visual_values
@@ -482,9 +480,6 @@ function transition_to_page(page)
   page_trans_frames = FPS/5
   page_trans_div = (target_page - current_page) / page_trans_frames
 end
-
--- shared logic for loading / saving settings
--- this file pollutes the global namespace
 
 function Common.load_settings()
   local fd=io.open(norns.state.data .. SETTINGS_FILE,"r")
