@@ -5,13 +5,13 @@
 
 local UI = include('lib/ui') -- TODO: path from script root
 
-HI_LEVEL = 15
-LO_LEVEL = 4
-FPS = 35
+local HI_LEVEL = 15
+local LO_LEVEL = 4
+local FPS = 35
 
-fine = false
-prev_held = false
-next_held = false
+local fine = false
+local prev_held = false
+local next_held = false
 
 local Common = {}
 local update_ui
