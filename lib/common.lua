@@ -6,17 +6,18 @@ local UI = include('lib/ui') -- TODO: include wtf! path from script root!?
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
-local FPS = 35
 
 local fine = false
 local prev_held = false
 local next_held = false
+local fps
 
 local Common = {}
 local update_ui
 local pages
 
-function Common.init(r_polls, r_params, ui, settings_file)
+function Common.init(r_polls, r_params, ui, settings_file, arg_fps)
+  fps = arg_fps
   Common.init_script_polls(r_polls)
   Common.init_params(r_params)
   Common.init_ui(ui)
@@ -35,7 +36,7 @@ function Common.init_script_polls(r_polls)
       Common.set_ui_dirty()
     end)
 
-    script_poll.time = 1/FPS
+    script_poll.time = 1/fps
     table.insert(script_polls, script_poll)
   end
 end
@@ -93,7 +94,7 @@ end
 function Common.start_ui()
   local update_ui_metro = metro.init()
   update_ui_metro.event = update_ui
-  update_ui_metro.time = 1/FPS
+  update_ui_metro.time = 1/fps
   update_ui_metro:start()
 end
 
@@ -477,7 +478,7 @@ end
 
 function transition_to_page(page)
   target_page = page
-  page_trans_frames = FPS/5
+  page_trans_frames = fps/5
   page_trans_div = (target_page - current_page) / page_trans_frames
 end
 

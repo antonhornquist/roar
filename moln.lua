@@ -8,6 +8,7 @@ Formatters = include('lib/formatters')
 Common = include('lib/common')
 
 SETTINGS_FILE = "moln.data"
+FPS = 35
 
 engine_ready = false
 
@@ -193,7 +194,7 @@ end
 
 function start_after_1_second_delay()
   init_engine_init_delay_metro()
-  Common.init(r_polls, r_params, ui, SETTINGS_FILE)
+  Common.init(r_polls, r_params, ui, SETTINGS_FILE, FPS)
 end
 
 function init_engine_init_delay_metro() -- TODO: dim screen until done

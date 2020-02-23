@@ -8,6 +8,7 @@ Formatters = include('lib/formatters')
 Common = include('lib/common')
 
 SETTINGS_FILE = "rymd.data"
+FPS = 35
 
 function init()
   r_polls, visual_values, r_params = RRymd.init(util.round(FPS/20))
@@ -84,7 +85,7 @@ function init()
     }
   }
 
-  Common.init(r_polls, r_params, ui, SETTINGS_FILE)
+  Common.init(r_polls, r_params, ui, SETTINGS_FILE, FPS)
 end
 
 function cleanup()
