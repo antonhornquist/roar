@@ -11,7 +11,7 @@ Lowpass filter with LFO/envelope follower modulation
 
 - `ENC1` adjusts main output level.
 - `ENC2` changes first parameter displayed on screen.
-- `ENC3` changes second parameter displayede on screen.
+- `ENC3` changes second parameter displayed on screen.
 - `KEY2` go to previous page.
 - `KEY3` go to next page.
 - `ARC` first two encoders act as norns `ENC2` and `ENC3`.
@@ -34,13 +34,13 @@ Polyphonic subtractive synthesizer
 ![screenshot](screen/moln-2.png)
 
 - `ENC1` adjusts main output level.
-- `ENC2` changes filter cutoff.
-- `ENC3` changes filter resonance.
-- `KEY2` momentary toggles fine parameter control.
-- `KEY3` triggers a random note.
+- `ENC2` changes first parameter displayed on screen.
+- `ENC3` changes second parameter displayed on screen.
+- `KEY2` go to previous page.
+- `KEY3` go to next page.
+- `ARC` first two encoders act as norns `ENC2` and `ENC3`.
 - `MIDI` device plays notes.
 - `GRID` plays notes too.
-- `ARC` changes filter cutoff (`ENC1`) and filter resonance (`ENC2`).
 
 ## Options
 
@@ -66,15 +66,17 @@ Parameters are available in the global parameters list:
 
 # Rymd
 
-Delay
+Cross-feedback delay with damping and delay line modulation
 
 ## Operation
 
 ![screenshot](screen/rymd.png)
 
 - `ENC1` adjusts main output level.
-- `ENC2` changes delay time.
-- `ENC3` changes feedback.
+- `ENC2` changes first parameter displayed on screen.
+- `ENC3` changes second parameter displayed on screen.
+- `KEY2` go to previous page.
+- `KEY3` go to next page.
 - `ARC` first two encoders act as norns `ENC2` and `ENC3`.
 
 ---
@@ -82,13 +84,15 @@ Delay
 
 # Skev
 
-Pitch and frequency shifter
+Pitch and frequency shifter with modulation
 
 ## Operation
 
 ![screenshot](screen/skev.png)
 
 - `ENC1` adjusts main output level.
-- `ENC2` changes frequency shift.
-- `ENC3` changes pitch ratio.
+- `ENC2` changes first parameter displayed on screen.
+- `ENC3` changes second parameter displayed on screen.
+- `KEY2` go to previous page.
+- `KEY3` go to next page.
 - `ARC` first two encoders act as norns `ENC2` and `ENC3`.
