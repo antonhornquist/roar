@@ -42,24 +42,24 @@ Polyphonic subtractive synthesizer
 - `MIDI` device plays notes.
 - `GRID` plays notes too.
 
-## Options
+## Parameters
 
-Parameters are available in the global parameters list:
+- `FREQ` / `Filter Frequency` - `10Hz`...`8kHz`. Lowpass filter cutoff frequency.
+- `RES` / `Filter Resonance` - `0`...`100%`. Lowpass filter cutoff resonance.
+- `A.RNG` / `Osc A Range` - `-2`..`+2`. Octave range.
+- `B.RNG` / `Osc B Range` - `-2`..`+2`. Octave range.
+- `A.PW` / `Osc A Pulse Width` - `0`..`100%`.
+- `B.PW` / `Osc B Pulse Width` - `0`..`100%`.
+- `DETUN` / `Osc Detune` - `0`...`100%`. Detunes the two oscillators.
+- `LFO` / `PWM Rate` - `0.01Hz`..`50Hz`. Pulse Width Modulation rate.
+- `PWM` / `PWM Depth` - `0`...`100%`. Pulse Width Modulation depth.
+- `E>FIL` / `Env > Filter Frequency` - `-100%`...`100%`. Lowpass filter envelope modulation.
+- `E.ATK` / `Env Attack` - `0.1ms`...`2s`. ADSR envelope attack time.
+- `E.DEC` / `Env Decay` - `0.1ms`...`8s`. ADSR envelope decay time.
+- `E.SUS` / `Env Sustain` - `0`...`100%`. ADSR envelope sustain level.
+- `E.REL` / `Env Release` - `0.1ms`...`8s`. ADSR envelope release time.
 
-- `Osc A Range` - -2..+2. Octave range.
-- `Osc A Pulse Width` - 0..100%.
-- `Osc B Range` - -2..+2. Octave range.
-- `Osc B Pulse Width` - 0..100%.
-- `Osc Detune` - 0...100%. Detunes the two oscillators.
-- `PWM Rate` - 0..50Hz. Pulse Width Modulation rate.
-- `PWM Depth` - 0...100%. Pulse Width Modulation depth.
-- `Filter Frequency` - 10Hz...8kHz. Lowpass filter cutoff frequency.
-- `Filter Resonance` - 0...100%. Lowpass filter cutoff resonance.
-- `Env > Filter Frequency` - -100%...100%. Lowpass filter envelope modulation.
-- `Env Attack` - ADSR envelope attack time.
-- `Env Decay` - ADSR envelope decay time.
-- `Env Sustain` - 0...100%. ADSR envelope sustain level.
-- `Env Release` - ADSR envelope release time.
+Parameters are also available in the global parameters list.
 
 ---
 ---
