@@ -3,16 +3,17 @@
 
 # Bob
 
-Lowpass filter with LFO modulation
+Lowpass filter with LFO/envelope follower modulation
 
 ## Operation
 
 ![screenshot](screen/bob.png)
 
 - `ENC1` adjusts main output level.
-- `ENC2` changes filter cutoff.
-- `ENC3` changes filter resonance.
-- `KEY2` momentary makes `ENC2` and `ENC3` control lfo rate and depth.
+- `ENC2` changes first parameter displayed on screen.
+- `ENC3` changes second parameter displayede on screen.
+- `KEY2` go to previous page.
+- `KEY3` go to next page.
 - `ARC` first two encoders act as norns `ENC2` and `ENC3`.
 
 ---
