@@ -31,7 +31,7 @@ Polyphonic subtractive synthesizer
 
 ## Operation
 
-![screenshot](screen/moln.png)
+![screenshot](screen/moln-2.png)
 
 - `ENC1` adjusts main output level.
 - `ENC2` changes filter cutoff.
