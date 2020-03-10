@@ -27,8 +27,8 @@ local connect_modules
 function init_r_modules()
   create_modules()
   connect_modules()
-  engine.pollvisual(0, "FreqShift=Frequency") -- TODO: should be indexed from 1
-  engine.pollvisual(1, "PitchShift=PitchRatio") -- TODO: should be indexed from 1
+  engine.pollvisual(1, "FreqShift=Frequency")
+  engine.pollvisual(2, "PitchShift=PitchRatio")
 end
 
 function create_modules()

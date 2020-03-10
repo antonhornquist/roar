@@ -29,8 +29,8 @@ function init_r_modules()
   create_modules()
   set_static_module_params()
   connect_modules()
-  engine.pollvisual(0, "Delay1=DelayTime") -- TODO: should be indexed from 1
-  engine.pollvisual(1, "Delay2=DelayTime") -- TODO: should be indexed from 1
+  engine.pollvisual(1, "Delay1=DelayTime")
+  engine.pollvisual(2, "Delay2=DelayTime")
 end
 
 function create_modules()

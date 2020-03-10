@@ -31,7 +31,7 @@ function init_r_modules()
   create_modules()
   set_static_module_params()
   connect_modules()
-  engine.pollvisual(0, "FilterL=Frequency") -- TODO: should be indexed from 1
+  engine.pollvisual(1, "FilterL=Frequency")
 end
 
 function create_modules()
