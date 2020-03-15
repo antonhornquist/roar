@@ -2,7 +2,8 @@
 
 -- uses _norns, metro, params, mix, poll globals
 
-local UI = include('lib/ui') -- TODO: include wtf! path from script root!?
+local UI = include('lib/ui') -- TODO: include wtf! path from script root!? use dofile instead?
+local spawn_render_ring_function = include('lib/bow') -- TODO: include wtf! path from script root!? use dofile instead?
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
