@@ -4,6 +4,7 @@
 
 local UI = include('lib/ui') -- TODO: include wtf! path from script root!? use dofile instead?
 local spawn_render_ring_function = include('lib/bow') -- TODO: include wtf! path from script root!? use dofile instead?
+local render_ring = spawn_render_ring_function()
 
 local HI_LEVEL = 15
 local LO_LEVEL = 4
@@ -395,71 +396,15 @@ function Common.default_arc_delta_handler(n, delta)
 end
 
 function Common.draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
-  local range = 44
-
-  local function translate(n)
-    n = util.round(n*range)
-    return n
-  end
-
-  local function ring_map(n)
-    if n < range/2 then
-      n = 64-range/2+n
-    else
-      n = n-range/2
-    end
-    return n
-  end
-
-  local function ring_map_stroke(ring, start_n, end_n, level)
-    for n=start_n, end_n do
-      my_arc:led(ring, ring_map(n), level)
+  local draw_ring = function(ring, value, visual_values)
+    local led_levels = render_ring(value, visual_values)
+    for i, led_level in ipairs(led_levels) do
+      my_arc:led(ring, i, led_level)
     end
   end
-
-  local function draw_visual_values(ring, visual_values)
-    local max_level = 2
-    local num_visual_values = #visual_values.content
-    if num_visual_values > 1 then
-      local prev_led_n = translate(visual_values.content[1])
-      for idx=2, num_visual_values do
-        local led_n = translate(visual_values.content[idx])
-        local min_n = math.min(prev_led_n, led_n)
-        local max_n = math.max(prev_led_n, led_n)
-
-        local level = util.round(max_level/num_visual_values*idx)
-
-        ring_map_stroke(ring, min_n, max_n, level)
-
-        prev_led_n = led_n
-      end
-    end
-    --[[
-    TODO
-    if num_visual_values == 2 then
-      print(ring, translate(visual_values.content[1]), translate(visual_values.content[2]), max_level)
-      ring_map_stroke(ring, translate(visual_values.content[1]), translate(visual_values.content[2]), max_level)
-    end
-    ]]
-  end
-
-  local function draw_arc_ring_leds(ring, value, visual_values)
-    for n=range/2, 64-range/2 do
-      my_arc:led(ring, n, 1)
-    end
-
-    if visual_values then
-      draw_visual_values(ring, visual_values)
-    end
-
-    local led_n = ring_map(translate(value))
-
-    my_arc:led(ring, led_n, 15)
-  end
-
   my_arc:all(0)
-  draw_arc_ring_leds(1, value1, visual_values1)
-  draw_arc_ring_leds(2, value2, visual_values2)
+  draw_ring(1, value1, visual_values1)
+  draw_ring(2, value2, visual_values2)
 end
 
 local function set_page(page)
@@ -519,12 +464,22 @@ end
 function Common.render_active_page_on_arc(my_arc)
   local page = pages[get_active_page()]
 
+  local visual_values1, visual_values2
+
+  if page[1].visual_values then
+    visual_values1 = page[1].visual_values["content"]
+  end
+
+  if page[2].visual_values then
+    visual_values2 = page[2].visual_values["content"]
+  end
+
   Common.draw_arc(
     my_arc,
     params:get_raw(Common.get_param_id_for_current_page(1)),
-    page[1].visual_values,
+    visual_values1,
     params:get_raw(Common.get_param_id_for_current_page(2)),
-    page[2].visual_values
+    visual_values2
   )
 end
 

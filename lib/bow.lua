@@ -1,4 +1,4 @@
--- self contained utility library for rendering a 0 .. 1.0 parameter value onto a ring with optional historical parameter values
+-- self contained utility library for rendering raw parameter values (0 .. 1.0) onto a ring
 
 local spawn_render_ring_function
 local assert_equal
@@ -85,14 +85,14 @@ spawn_render_ring_function = function(num_ring_leds, num_ring_led_range)
   local render_base
   local render_range
 
-  local render_ring = function(value, visual_values)
+  local render_ring = function(value, previous_values)
     local led_levels = {}
     render_base(led_levels, 5)
-    render_range(led_levels, value, visual_values)
+    render_range(led_levels, value, previous_values)
     return led_levels
   end
 
-  render_range = function(led_levels, value, visual_values)
+  render_range = function(led_levels, value, previous_values)
     local top_led_index = ((num_ring_led_range-1)/2)
     local num_base_leds = (num_ring_leds - num_ring_led_range)
 
@@ -104,18 +104,18 @@ spawn_render_ring_function = function(num_ring_leds, num_ring_led_range)
     local translate
     local render_range
 
-    local render_visual_values = function(visual_values, max_level)
-      local num_visual_values = #visual_values
+    local render_previous_values = function(previous_values, max_level)
+      local num_previous_values = #previous_values
       local prev_led_n, led_n, max_led_n, min_led_n, level
 
-      if num_visual_values > 1 then
-        prev_led_n = translate(visual_values[1])
-        for offset_idx=1,(num_visual_values-1) do
-          led_n = translate(visual_values[offset_idx+1])
+      if num_previous_values > 1 then
+        prev_led_n = translate(previous_values[1])
+        for offset_idx=1,(num_previous_values-1) do
+          led_n = translate(previous_values[offset_idx+1])
           max_led_n = math.max(prev_led_n, led_n)
           min_led_n = math.min(prev_led_n, led_n)
 
-          level = math.floor(math.max(round(max_level/(num_visual_values-1)*offset_idx), 1))
+          level = math.floor(math.max(round(max_level/(num_previous_values-1)*offset_idx), 1))
 
           render_range(min_led_n, max_led_n, level)
 
@@ -144,8 +144,8 @@ spawn_render_ring_function = function(num_ring_leds, num_ring_led_range)
       range_led_levels[led_index+1] = level
     end
 
-    if visual_values then
-      render_visual_values(visual_values, 2)
+    if previous_values then
+      render_previous_values(previous_values, 2)
     end
 
     render_value(value, 15)

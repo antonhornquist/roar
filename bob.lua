@@ -1,4 +1,3 @@
--- FIXME: arc range bug - range arc not 1pixel correct
 -- FIXME: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
 -- scriptname: bob
 -- v1.3.0 @jah
