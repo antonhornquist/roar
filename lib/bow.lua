@@ -193,5 +193,5 @@ clip = function(number, low, high)
   end
 end
 
-run_tests() -- uncomment to run tests
+--run_tests() -- uncomment to run tests
 return spawn_render_ring_function
