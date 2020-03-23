@@ -5,7 +5,7 @@
 engine.name = 'R'
 
 RBob = include('lib/r_bob')
-Formatters = include('lib/formatters')
+Formatters = include('lib/formatters') -- TODO: this should be non-raw formatters
 Common = include('lib/common')
 
 SETTINGS_FILE = "bob.data"
@@ -22,7 +22,7 @@ function init()
           label="CUTOFF",
           id="cutoff",
           format=function(id)
-            return Formatters.adaptive_freq(params:get(id))
+            return Formatters.adaptive_freq(params:get(id)) -- TODO: this should be non-raw formatters
           end,
           visual_values = visual_values.cutoff
         },
@@ -93,7 +93,7 @@ function cleanup()
 end
 
 function redraw()
-  Common.redraw()
+  Common.redraw() -- TODO: pass screen
 end
 
 function enc(n, delta)

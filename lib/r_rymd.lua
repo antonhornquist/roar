@@ -1,8 +1,7 @@
--- TODO: uses engine global (could be passed in init())
--- TODO: assumes R engine is loaded (or should this be done here?)
+-- assumes r engine is loaded and norns engine global available
 
 local R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
-local ControlSpec = require('controlspec') -- TODO
+local ControlSpec = require('controlspec')
 local Formatters = require('formatters')
 local CappedList = include('lib/capped_list')
 
@@ -22,12 +21,10 @@ function Module.init(visual_buf_size)
 end
 
 local create_modules
-local set_static_module_params
 local connect_modules
 
 function init_r_modules()
   create_modules()
-  set_static_module_params()
   connect_modules()
   engine.pollvisual(1, "Delay1=DelayTime")
   engine.pollvisual(2, "Delay2=DelayTime")
@@ -44,11 +41,6 @@ function create_modules()
   engine.new("Filter2", "MMFilter")
   engine.new("Feedback", "SGain")
   engine.new("SoundOut", "SoundOut")
-end
-
-function set_static_module_params()
-  engine.set("Filter1.Resonance", 0) -- TODO: or is this the default? then no need to set
-  engine.set("Filter2.Resonance", 0) -- TODO: or is this the default? then no need to set
 end
 
 function connect_modules()

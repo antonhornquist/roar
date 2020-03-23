@@ -1,5 +1,4 @@
--- TODO: uses engine global (could be passed in init())
--- TODO: assumes R engine is loaded (or should this be done here?)
+-- assumes r engine is loaded and norns engine global available
 
 local R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 local ControlSpec = require('controlspec')
@@ -146,7 +145,7 @@ function init_r_params()
   table.insert(r_params, {
     id="envf_attack",
     name="EnvF Attack",
-    controlspec=env_attack_spec, -- TODO
+    controlspec=env_attack_spec, -- TODO: this should be in r.lua and picked from R.specs
     action=function (value)
       engine.set("EnvF.Attack", value)
     end
@@ -158,7 +157,7 @@ function init_r_params()
   table.insert(r_params, {
     id="envf_decay",
     name="EnvF Decay",
-    controlspec=env_decay_spec, -- TODO
+    controlspec=env_decay_spec, -- TODO: this should be in r.lua and picked from R.specs
     action=function (value)
       engine.set("EnvF.Decay", value)
     end
@@ -167,7 +166,7 @@ function init_r_params()
   table.insert(r_params, {
     id="envf_sensitivity",
     name="EnvF Sensitivity",
-    controlspec=ControlSpec.new(0, 1), -- TODO
+    controlspec=ControlSpec.new(0, 1), -- TODO: this should be in r.lua and picked from R.specs
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("EnvF.Sensitivity", value)

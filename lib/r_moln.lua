@@ -1,5 +1,4 @@
--- TODO: uses engine global (could be passed in init())
--- TODO: assumes R engine is loaded (or should this be done here?)
+-- assumes r engine is loaded and norns engine global available
 
 local R = require('r/lib/r') -- assumes r engine resides in ~/dust/code/r folder
 local ControlSpec = require('controlspec')

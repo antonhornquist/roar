@@ -2,8 +2,8 @@
 
 -- uses _norns, metro, params, mix, poll globals
 
-local UI = include('lib/ui') -- TODO: include wtf! path from script root!? use dofile instead?
-local spawn_render_ring_function = include('lib/bow') -- TODO: include wtf! path from script root!? use dofile instead?
+local UI = include('lib/ui')
+local spawn_render_ring_function = include('lib/bow')
 local render_ring = spawn_render_ring_function()
 
 local HI_LEVEL = 15
@@ -58,6 +58,8 @@ function Common.init_params(r_params)
   end
 end
 
+local calculate_pages_label_ui_widths
+
 function Common.init_ui(conf)
   if conf.arc then
     local arc_conf = conf.arc
@@ -91,6 +93,15 @@ function Common.init_ui(conf)
   end
 
   pages = conf.pages or {}
+  calculate_pages_label_ui_widths(pages)
+end
+
+function calculate_pages_label_ui_widths(pages)
+  screen.font_size(16) -- TODO: inject screen
+  for i,page in ipairs(pages) do
+    pages[i][1].label_width = screen.text_extents(page[1].label) - 2
+    pages[i][2].label_width = screen.text_extents(page[2].label) - 2
+  end
 end
 
 function Common.start_ui()
@@ -225,15 +236,13 @@ function Common.redraw()
     local ind_x = x + 1
     local ind_y = y + 14
 
-    local label_width = screen.text_extents(ui_param.label) - 2 -- TODO, cache this in ind_width or similar instead
-
     local visual_values = ui_param.visual_values
     if visual_values then
-      draw_visual_values(ind_x, ind_y, label_width, visual_values)
+      draw_visual_values(ind_x, ind_y, ui_param.label_width, visual_values)
     end
 
     local value = params:get_raw(ui_param.id) -- TODO: refactor out params, should be an injected dependency
-    draw_value(ind_x, ind_y, translate(value, label_width), HI_LEVEL)
+    draw_value(ind_x, ind_y, translate(value, ui_param.label_width), HI_LEVEL)
   end
 
   local function draw_enc2_widget()
@@ -299,7 +308,7 @@ function Common.redraw()
     screen.text("NEXT")
   end
 
-  screen.font_size(16)
+  screen.font_size(16) -- TODO: inject screen
   screen.clear()
 
   draw_enc1_widget()
