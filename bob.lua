@@ -1,4 +1,3 @@
--- FIXME: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
 -- scriptname: bob
 -- v1.3.0 @jah
 
@@ -94,6 +93,8 @@ end
 
 function redraw()
   Common.redraw() -- TODO: pass screen
+
+  -- TODO: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
 end
 
 function enc(n, delta)
