@@ -78,112 +78,84 @@ function init()
         {
           label="FREQ",
           id="filter_frequency",
-          format=function(id)
-            return Formatters.adaptive_freq(params:get(id))
-          end
+          formatter=Formatters.adaptive_freq
         },
         {
           label="RES",
           id="filter_resonance",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         }
       },
       {
         {
           label="A.RNG",
           id="osc_a_range",
-          format=function(id)
-            return Formatters.range(params:get(id))
-          end
+          formatter=Formatters.range
         },
         {
           label="B.RNG",
           id="osc_b_range",
-          format=function(id)
-            return Formatters.range(params:get(id))
-          end
+          formatter=Formatters.range
         }
       },
       {
         {
           label="A.PW",
           id="osc_a_pulsewidth",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         },
         {
           label="B.PW",
           id="osc_b_pulsewidth",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         }
       },
       {
         {
           label="DETUN",
           id="osc_detune",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         },
         {
           label="LFO",
           id="lfo_frequency",
-          format=function(id)
-            return Formatters.adaptive_freq(params:get(id))
-          end
+          formatter=Formatters.adaptive_freq
         },
       },
       {
         {
           label="PWM",
           id="lfo_to_osc_pwm",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         },
         {
           label="E>FIL",
           id="env_to_filter_fm",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         },
       },
       {
         {
           label="E.ATK",
           id="env_attack",
-          format=function(id)
-            return Formatters.adaptive_time(params:get(id))
-          end
+          formatter=Formatters.adaptive_time
         },
         {
           label="E.DEC",
           id="env_decay",
-          format=function(id)
-            return Formatters.adaptive_time(params:get(id))
-          end
+          formatter=Formatters.adaptive_time
         },
       },
       {
         {
           label="E.SUS",
           id="env_sustain",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         },
         {
           label="E.REL",
           id="env_release",
-          format=function(id)
-            return Formatters.adaptive_time(params:get(id))
-          end
+          formatter=Formatters.adaptive_time
         }
       }
     }

@@ -20,33 +20,25 @@ function init()
         {
           label="DIR",
           id="direct",
-          format=function(id)
-            return Formatters.adaptive_db(params:get(id))
-          end
+          formatter=Formatters.adaptive_db
         },
         {
           label="SEND",
           id="delay_send",
-          format=function(id)
-            return Formatters.adaptive_db(params:get(id))
-          end
+          formatter=Formatters.adaptive_db
         }
       },
       {
         {
           label="L.TIME",
           id="delay_time_left",
-          format=function(id)
-            return Formatters.adaptive_time(params:get(id))
-          end,
+          formatter=Formatters.adaptive_time,
           visual_values = visual_values.delay_time_left
         },
         {
           label="R.TIME",
           id="delay_time_right",
-          format=function(id)
-            return Formatters.adaptive_time(params:get(id))
-          end,
+          formatter=Formatters.adaptive_time,
           visual_values = visual_values.delay_time_right
         }
       },
@@ -54,15 +46,13 @@ function init()
         {
           label="DAMP",
           id="damping",
-          format=function(id)
-            return Formatters.adaptive_freq(params:get(id))
-          end
+          formatter=Formatters.adaptive_freq
         },
         {
           label="FBK",
           id="feedback",
-          format=function(id)
-            return util.round(params:get_raw(id)*100, 1).."%"
+          formatter=function(param)
+            return util.round(param:get_raw()*100, 1).."%"
           end
         }
       },
@@ -70,16 +60,12 @@ function init()
         {
           label="RATE",
           id="mod_rate",
-          format=function(id)
-            return Formatters.adaptive_freq(params:get(id))
-          end
+          formatter=Formatters.adaptive_freq
         },
         {
           label="MOD",
           id="delay_time_mod_depth",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         }
       },
     }

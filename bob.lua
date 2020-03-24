@@ -4,7 +4,7 @@
 engine.name = 'R'
 
 RBob = include('lib/r_bob')
-Formatters = include('lib/formatters') -- TODO: this should be non-raw formatters
+Formatters = include('lib/formatters')
 Common = include('lib/common')
 
 SETTINGS_FILE = "bob.data"
@@ -20,65 +20,49 @@ function init()
         {
           label="CUTOFF",
           id="cutoff",
-          format=function(id)
-            return Formatters.adaptive_freq(params:get(id)) -- TODO: this should be non-raw formatters
-          end,
+          formatter=Formatters.adaptive_freq,
           visual_values = visual_values.cutoff
         },
         {
           label="RES",
           id="resonance",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         }
       },
       {
         {
           label="LFO",
           id="lfo_rate",
-          format=function(id)
-            return Formatters.adaptive_freq(params:get(id))
-          end
+          formatter=Formatters.adaptive_freq
         },
         {
           label="L>FRQ",
           id="lfo_to_cutoff",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         }
       },
       {
         {
           label="E.ATK",
           id="envf_attack",
-          format=function(id)
-            return Formatters.adaptive_time(params:get(id))
-          end
+          formatter=Formatters.adaptive_time
         },
         {
           label="E.DEC",
           id="envf_decay",
-          format=function(id)
-            return Formatters.adaptive_time(params:get(id))
-          end
+          formatter=Formatters.adaptive_time
         },
       },
       {
         {
           label="E.SNS",
           id="envf_sensitivity",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         },
         {
           label="E>FRQ",
           id="env_to_cutoff",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         }
       }
     }

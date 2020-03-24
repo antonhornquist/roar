@@ -1,6 +1,6 @@
 -- shared logic for paged user interface
 
--- uses _norns, metro, params, mix, poll globals
+-- uses metro, params, mix, poll globals
 
 local UI = include('lib/ui')
 local spawn_render_ring_function = include('lib/bow')
@@ -58,7 +58,7 @@ function Common.init_params(r_params)
   end
 end
 
-local calculate_pages_label_ui_widths
+local calculate_ui_label_widths
 
 function Common.init_ui(conf)
   if conf.arc then
@@ -93,10 +93,10 @@ function Common.init_ui(conf)
   end
 
   pages = conf.pages or {}
-  calculate_pages_label_ui_widths(pages)
+  calculate_ui_label_widths(pages)
 end
 
-function calculate_pages_label_ui_widths(pages)
+function calculate_ui_label_widths(pages)
   screen.font_size(16) -- TODO: inject screen
   for i,page in ipairs(pages) do
     pages[i][1].label_width = screen.text_extents(page[1].label) - 2
@@ -225,13 +225,18 @@ function Common.redraw()
   end
 
   local function draw_ui_param(page, param_index, x, y)
+    local function format_param(ui_param)
+      local param = params:lookup_param(ui_param.id)
+      return ui_param.formatter(param)
+    end
+
     local ui_param = pages[page][param_index]
     screen.move(x, y)
     screen.level(LO_LEVEL)
     screen.text(ui_param.label)
     screen.move(x, y+12)
     screen.level(HI_LEVEL)
-    screen.text(ui_param.format(ui_param.id))
+    screen.text(format_param(ui_param))
 
     local ind_x = x + 1
     local ind_y = y + 14

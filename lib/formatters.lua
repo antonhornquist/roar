@@ -1,14 +1,16 @@
 -- utility library for paging UI
---
--- TODO: difference to regular formatters is that these functions takes values, not params
 
 local Formatters = {}
 
-function Formatters.percentage(value)
+local function percentage_raw(value)
   return util.round(value*100, 1) .. "%"
 end
 
-function Formatters.adaptive_time(ms)
+function Formatters.percentage(param)
+  return percentage_raw(param:get())
+end
+
+local function adaptive_time_raw(ms)
   if util.round(ms, 1) < 1000 then
     return util.round(ms, 1) .. "ms"
   elseif util.round(ms, 1) < 10000 then
@@ -18,7 +20,11 @@ function Formatters.adaptive_time(ms)
   end
 end
 
-function Formatters.range(range)
+function Formatters.adaptive_time(param)
+  return adaptive_time_raw(param:get())
+end
+
+local function range_raw(range)
   if range < 0 then
     return tostring(range)
   elseif range > 0 then
@@ -28,7 +34,11 @@ function Formatters.range(range)
   end
 end
 
-function Formatters.adaptive_freq(hz)
+function Formatters.range(param)
+  return range_raw(param:get())
+end
+
+local function adaptive_freq_raw(hz)
   if hz <= -1000 then
     return util.round(hz/1000, 0.1) .. "kHz"
   elseif hz <= -100 then
@@ -56,7 +66,11 @@ function Formatters.adaptive_freq(hz)
   end
 end
 
-function Formatters.adaptive_db(db)
+function Formatters.adaptive_freq(param)
+  return adaptive_freq_raw(param:get())
+end
+
+local function adaptive_db_raw(db)
   if db < -10 then
     return util.round(db, 1).."dB"
   elseif db < 0 then
@@ -71,6 +85,10 @@ function Formatters.adaptive_db(db)
   else
     return util.round(db/1000, 1) .. "dB"
   end
+end
+
+function Formatters.adaptive_db(param)
+  return adaptive_db_raw(param:get())
 end
 
 return Formatters

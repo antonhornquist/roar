@@ -20,17 +20,13 @@ function init()
         {
           label="F.SHFT",
           id="freq_shift",
-          format=function(id)
-            return Formatters.adaptive_freq(params:get(id))
-          end,
+          formatter=Formatters.adaptive_freq,
           visual_values = visual_values.freq_shift
         },
         {
           label="P.RAT",
           id="pitch_ratio",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end,
+          formatter=Formatters.percentage,
           visual_values = visual_values.pitch_ratio
         }
       },
@@ -38,30 +34,24 @@ function init()
         {
           label="P.DISP",
           id="pitch_dispersion",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         },
         {
           label="T.DISP",
           id="time_dispersion",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         }
       },
       {
         {
           label="LFO.HZ",
           id="lfo_rate",
-          format=function(id)
-            return Formatters.adaptive_freq(params:get(id))
-          end
+          formatter=Formatters.adaptive_freq
         },
         {
           label="L.SHP",
           id="lfo_rate",
-          format=function(id)
+          formatter=function(param)
             return "N/A"
           end
         }
@@ -70,16 +60,12 @@ function init()
         {
           label=">F.SHFT",
           id="lfo_to_freq_shift",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         },
         {
           label=">P.RAT",
           id="lfo_to_pitch_ratio",
-          format=function(id)
-            return Formatters.percentage(params:get(id))
-          end
+          formatter=Formatters.percentage
         }
       }
     }
