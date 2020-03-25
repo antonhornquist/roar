@@ -245,7 +245,7 @@ function Common.redraw()
       draw_visual_values(ind_x, ind_y, ui_param.label_width, visual_values)
     end
 
-    local value = params:get_raw(ui_param.id) -- TODO: refactor out params, should be an injected dependency
+    local value = params:get_raw(ui_param.id)
     draw_value(ind_x, ind_y, translate(value, ui_param.label_width), HI_LEVEL)
   end
 
@@ -312,7 +312,7 @@ function Common.redraw()
     screen.text("NEXT")
   end
 
-  screen.font_size(16) -- TODO: inject screen
+  screen.font_size(16)
   screen.clear()
 
   draw_enc1_widget()
