@@ -63,7 +63,7 @@ function UI.refresh()
     if UI.screen_refresh_callback then
       UI.screen_refresh_callback()
     end
-    screen.update()
+    screen.update() -- TODO: norns global, inject instead
     UI.screen_dirty = false
   end
 end
