@@ -75,7 +75,6 @@ function Common.init_ui(conf)
     UI.init_arc(arc_conf)
   end
 
-  -- TODO: pass screen here?
   local screen_conf
   if conf.screen then
     screen_conf = conf.screen
@@ -97,7 +96,7 @@ function Common.init_ui(conf)
 end
 
 function calculate_ui_label_widths(pages)
-  screen.font_size(16) -- TODO: inject screen
+  screen.font_size(16)
   for i,page in ipairs(pages) do
     pages[i][1].label_width = screen.text_extents(page[1].label) - 2
     pages[i][2].label_width = screen.text_extents(page[2].label) - 2

@@ -1,6 +1,6 @@
 -- utility library for single-grid, single-arc, single-midi device script UIs
 -- written to track when UI is invalidated and needs to be refreshed
--- no dependency to norns global variables
+-- one dependency to norns global variable: screen
 --
 -- main entry points:
 -- UI.init_arc - invoked if an arc is to be used. has to be passed a device (ie. return value from arc.connect()), and optionally sets up callbacks for receiving enc delta messages (on_delta) and refreshing arc leds (on_refresh) when arc UI is invalidated
