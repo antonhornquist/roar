@@ -76,7 +76,7 @@ function cleanup()
 end
 
 function redraw()
-  Common.redraw() -- TODO: pass screen
+  Common.redraw()
 
   -- TODO: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
 end
