@@ -80,14 +80,14 @@ function init_r_polls()
     {
       id = "delay_time_left",
       handler = function(value)
-        local visual_value = delay_time_left_spec:unmap(value) -- TODO: this should use an edited version of the Visual spec
+        local visual_value = delay_time_left_spec:unmap(value)
         CappedList.push(visual_values.delay_time_left, visual_value)
       end
     },
     {
       id = "delay_time_right",
       handler = function(value)
-        local visual_value = delay_time_right_spec:unmap(value) -- TODO: this should use an edited version of the Visual spec
+        local visual_value = delay_time_right_spec:unmap(value)
         CappedList.push(visual_values.delay_time_right, visual_value)
       end
     }

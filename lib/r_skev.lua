@@ -64,14 +64,14 @@ function init_r_polls()
     {
       id = "freq_shift",
       handler = function(value)
-        local visual_value = R.specs.FShift.Frequency:unmap(value) -- TODO: establish visual specs in lua module
+        local visual_value = R.specs.FShift.Frequency:unmap(value)
         CappedList.push(visual_values.freq_shift, visual_value)
       end
     },
     {
       id = "pitch_ratio",
       handler = function(value)
-        local visual_value = R.specs.PShift.PitchRatio:unmap(value) -- TODO: establish visual specs in lua module
+        local visual_value = R.specs.PShift.PitchRatio:unmap(value)
         CappedList.push(visual_values.pitch_ratio, visual_value)
       end
     }

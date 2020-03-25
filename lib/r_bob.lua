@@ -74,7 +74,7 @@ function init_r_polls()
     {
       id = "cutoff",
       handler = function(value)
-        local visual_value = cutoff_spec:unmap(value) -- TODO: this should use an edited version of the Visual spec
+        local visual_value = cutoff_spec:unmap(value)
         CappedList.push(visual_values.cutoff, visual_value)
       end
     }
@@ -145,7 +145,7 @@ function init_r_params()
   table.insert(r_params, {
     id="envf_attack",
     name="EnvF Attack",
-    controlspec=env_attack_spec, -- TODO: this should be in r.lua and picked from R.specs
+    controlspec=env_attack_spec,
     action=function (value)
       engine.set("EnvF.Attack", value)
     end
@@ -157,7 +157,7 @@ function init_r_params()
   table.insert(r_params, {
     id="envf_decay",
     name="EnvF Decay",
-    controlspec=env_decay_spec, -- TODO: this should be in r.lua and picked from R.specs
+    controlspec=env_decay_spec,
     action=function (value)
       engine.set("EnvF.Decay", value)
     end
@@ -166,7 +166,7 @@ function init_r_params()
   table.insert(r_params, {
     id="envf_sensitivity",
     name="EnvF Sensitivity",
-    controlspec=ControlSpec.new(0, 1), -- TODO: this should be in r.lua and picked from R.specs
+    controlspec=ControlSpec.new(0, 1),
     formatter=Formatters.percentage,
     action=function (value)
       engine.set("EnvF.Sensitivity", value)

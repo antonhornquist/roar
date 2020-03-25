@@ -169,7 +169,7 @@ function start_after_1_second_delay()
   Common.init(r_polls, r_params, ui, SETTINGS_FILE, FPS)
 end
 
-function init_engine_init_delay_metro() -- TODO: dim screen until done
+function init_engine_init_delay_metro()
   local engine_init_delay_metro = metro.init()
   engine_init_delay_metro.event = function()
     engine_ready = true

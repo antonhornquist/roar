@@ -77,8 +77,6 @@ end
 
 function redraw()
   Common.redraw()
-
-  -- TODO: cutoff indicator and visuals (as with delaytime, pshift/fshift) when not on page 1
 end
 
 function enc(n, delta)
