@@ -1,6 +1,6 @@
 -- shared logic for paged user interface
 
--- uses metro, params, mix, poll globals
+-- uses screen, metro, params, mix, poll globals
 
 local UI = include('lib/ui')
 local spawn_render_ring_function = include('lib/bow')
@@ -142,7 +142,7 @@ function Common.redraw()
   local enc1_y = 12
 
   local enc2_x = 10
-  local enc2_y = 29 -- 31 -- 33
+  local enc2_y = 29
 
   local enc3_x = enc2_x+65
   local enc3_y = enc2_y
@@ -195,7 +195,7 @@ function Common.redraw()
   end
 
   local function draw_visual_values(ind_x, ind_y, width, visual_values)
-    local max_level = 2 -- LO_LEVEL
+    local max_level = 2
     local num_visual_values = #visual_values.content
     if num_visual_values > 1 then
       local prev_visual_value = visual_values.content[1]
@@ -212,15 +212,6 @@ function Common.redraw()
         prev_visual_value = visual_value
       end
     end
-    --[[
-    if num_visual_values == 2 then
-      local prev_visual_value = translate(visual_values.content[1], width-2)
-      local current_visual_value = translate(visual_values.content[2], width-2)
-      local min_visual_value = math.min(prev_visual_value, current_visual_value)
-      local max_visual_value = math.max(prev_visual_value, current_visual_value)
-      strokedraw_value(ind_x, ind_y, min_visual_value, max_visual_value, max_level, width)
-    end
-    ]]
   end
 
   local function draw_ui_param(page, param_index, x, y)
@@ -286,7 +277,6 @@ function Common.redraw()
   end
 
   local function draw_key2key3_widget()
-    --screen.move(126, key2_y)
     screen.move(key2_x+42, key2_y)
     screen.level(HI_LEVEL)
     screen.text("FN")
@@ -333,7 +323,7 @@ function Common.redraw()
   draw_key2_widget()
   draw_key3_widget()
 
-  screen.update() -- TODO: screen should probably be considered a device in the screen { device = screen } conf
+  screen.update()
 end
 
 function Common.enc(n, delta)
