@@ -38,15 +38,15 @@ function create_modules()
 end
 
 function connect_modules()
-  engine.connect("LFO/Sine", "FreqShift/FM")
-  engine.connect("LFO/Sine", "PitchShift/PitchRatioModulation")
+  engine.connect("LFO/Sine", "FreqShift*FM")
+  engine.connect("LFO/Sine", "PitchShift*PitchRatioModulation")
 
-  engine.connect("SoundIn/Left", "PitchShift/Left")
-  engine.connect("SoundIn/Right", "PitchShift/Right")
-  engine.connect("PitchShift/Left", "FreqShift/Left")
-  engine.connect("PitchShift/Right", "FreqShift/Right")
-  engine.connect("FreqShift/Left", "SoundOut/Left")
-  engine.connect("FreqShift/Right", "SoundOut/Right")
+  engine.connect("SoundIn/Left", "PitchShift*Left")
+  engine.connect("SoundIn/Right", "PitchShift*Right")
+  engine.connect("PitchShift/Left", "FreqShift*Left")
+  engine.connect("PitchShift/Right", "FreqShift*Right")
+  engine.connect("FreqShift/Left", "SoundOut*Left")
+  engine.connect("FreqShift/Right", "SoundOut*Right")
 end
 
 function init_visual_values_bufs(visual_buf_size)
