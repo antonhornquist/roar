@@ -13,6 +13,7 @@ local fine = false
 local prev_held = false
 local next_held = false
 local fps
+local current_page
 
 local Common = {}
 local update_ui
@@ -155,7 +156,7 @@ function Common.redraw()
   local key3_x = key2_x+65
   local key3_y = key2_y
 
-  local function draw_enc1_widget()
+  local draw_enc1_widget = function()
     screen.move(enc1_x, enc1_y)
 
     screen.level(LO_LEVEL)
@@ -165,28 +166,28 @@ function Common.redraw()
     screen.text(util.round(mix:get_raw("output")*100, 1))
   end
 
-  local function draw_event_flash_widget()
+  local draw_event_flash_widget = function()
     screen.level(LO_LEVEL)
     screen.rect(122, enc1_y-7, 5, 5)
     screen.fill()
   end
 
-  local function draw_bullet(x, y, level)
+  local draw_bullet = function(x, y, level)
     screen.level(level)
     screen.rect(x, y, 2, 2)
     screen.fill()
   end
 
-  local function translate(value, indicator_width)
+  local translate = function(value, indicator_width)
     return util.round(indicator_width * value)
   end
 
-  local function draw_value(ind_x, ind_y, ind_x_delta, level)
+  local draw_value = function(ind_x, ind_y, ind_x_delta, level)
     local x = ind_x + ind_x_delta
     draw_bullet(x, ind_y, level)
   end
 
-  local function strokedraw_value(ind_x, ind_y, min_value, max_value, level, width)
+  local strokedraw_value = function(ind_x, ind_y, min_value, max_value, level, width)
     local min_ind_x_delta = translate(min_value, width)
     local max_ind_x_delta = translate(max_value, width)
     for ind_x_delta=min_ind_x_delta, max_ind_x_delta do
@@ -194,7 +195,7 @@ function Common.redraw()
     end
   end
 
-  local function draw_visual_values(ind_x, ind_y, width, visual_values)
+  local draw_visual_values = function(ind_x, ind_y, width, visual_values)
     local max_level = 2
     local num_visual_values = #visual_values.content
     if num_visual_values > 1 then
@@ -214,8 +215,8 @@ function Common.redraw()
     end
   end
 
-  local function draw_ui_param(page, param_index, x, y)
-    local function format_param(ui_param)
+  local draw_ui_param = function(page, param_index, x, y)
+    local format_param = function(ui_param)
       local param = params:lookup_param(ui_param.id)
       return ui_param.formatter(param)
     end
@@ -240,7 +241,7 @@ function Common.redraw()
     draw_value(ind_x, ind_y, translate(value, ui_param.label_width), HI_LEVEL)
   end
 
-  local function draw_enc2_widget()
+  local draw_enc2_widget = function()
     local left = math.floor(current_page)
     local right = math.ceil(current_page)
     local offset = current_page - left
@@ -254,7 +255,7 @@ function Common.redraw()
 
   end
 
-  local function draw_enc3_widget()
+  local draw_enc3_widget = function()
     local left = math.floor(current_page)
     local right = math.ceil(current_page)
     local offset = current_page - left
@@ -267,7 +268,7 @@ function Common.redraw()
     end
   end
     
-  local function draw_page_indicator()
+  local draw_page_indicator = function()
     local div = 128/#pages
 
     screen.level(LO_LEVEL)
@@ -276,13 +277,13 @@ function Common.redraw()
     screen.fill()
   end
 
-  local function draw_key2key3_widget()
+  local draw_key2key3_widget = function()
     screen.move(key2_x+42, key2_y)
     screen.level(HI_LEVEL)
     screen.text("FN")
   end
 
-  local function draw_key2_widget()
+  local draw_key2_widget = function()
     screen.move(key2_x, key2_y)
     if prev_held and not fine then
       screen.level(HI_LEVEL)
@@ -292,7 +293,7 @@ function Common.redraw()
     screen.text("PREV")
   end
 
-  local function draw_key3_widget()
+  local draw_key3_widget = function()
     screen.move(key3_x, key3_y)
     if next_held and not fine then
       screen.level(HI_LEVEL)
@@ -303,7 +304,7 @@ function Common.redraw()
   end
 
   screen.font_size(16)
-  screen.clear()
+  screen.clear() -- TODO: do this in redraw() ?
 
   draw_enc1_widget()
 
@@ -410,7 +411,7 @@ function Common.draw_arc(my_arc, value1, visual_values1, value2, visual_values2)
   draw_ring(2, value2, visual_values2)
 end
 
-local function set_page(page)
+local set_page = function(page)
   current_page = page
 end
 
