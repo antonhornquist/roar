@@ -271,9 +271,13 @@ function Common.redraw()
   local draw_page_indicator = function()
     local div = 128/#pages
 
-    screen.level(LO_LEVEL)
+    local x = util.round((current_page-1)*div)
+    local y = page_indicator_y
+    local width = util.round(div)
+    local height = 2
 
-    screen.rect(util.round((current_page-1)*div), page_indicator_y, util.round(div), 2)
+    screen.level(LO_LEVEL)
+    screen.rect(x, y, width, height)
     screen.fill()
   end
 
