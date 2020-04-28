@@ -139,7 +139,7 @@ function Common.default_screen_refresh_handler()
 end
 
 function Common.redraw()
-  local enc1_x = 0
+  local enc1_x = 1
   local enc1_y = 12
 
   local enc2_x = 10
@@ -150,7 +150,7 @@ function Common.redraw()
 
   local page_indicator_y = enc2_y + 16 + 3
 
-  local key2_x = 0
+  local key2_x = 1
   local key2_y = 63
 
   local key3_x = key2_x+65
